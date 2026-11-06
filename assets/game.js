@@ -244,6 +244,24 @@ var e = [
       name: `Temple Quiet`,
       desc: `Clear all five Shadow Temple levels.`,
     },
+    { id: `cinder_path`, name: `Cinder Path`, desc: `Clear Level 16 — Cinder Path.` },
+    { id: `ash_bridge`, name: `Ash Bridge`, desc: `Clear Level 17 — Ash Bridge.` },
+    { id: `magma_stairs`, name: `Magma Stairs`, desc: `Clear Level 18 — Magma Stairs.` },
+    { id: `forge_yard`, name: `Forge Yard`, desc: `Clear Level 19 — Forge Yard.` },
+    { id: `flame_general`, name: `Flame Out`, desc: `Perform Homa’s Thunder Fatality.` },
+    { id: `fire_world`, name: `Cinders Cold`, desc: `Clear all five Fire Mountains levels.` },
+    { id: `snow_gate`, name: `Snow Gate`, desc: `Clear Level 21 — Snow Gate.` },
+    { id: `ice_canal`, name: `Ice Canal`, desc: `Clear Level 22 — Ice Canal.` },
+    { id: `frost_shrine`, name: `Frost Shrine`, desc: `Clear Level 23 — Frost Shrine.` },
+    { id: `blizzard_keep`, name: `Blizzard Keep`, desc: `Clear Level 24 — Blizzard Keep.` },
+    { id: `winter_lord`, name: `Winter Broken`, desc: `Perform Yuki’s Fatality.` },
+    { id: `frost_world`, name: `Thaw`, desc: `Clear all five Frozen Kingdom levels.` },
+    { id: `rain_alley`, name: `Rain Alley`, desc: `Clear Level 26 — Rain Alley.` },
+    { id: `arcade_roof`, name: `Arcade Roof`, desc: `Clear Level 27 — Arcade Roof.` },
+    { id: `bullet_train`, name: `Bullet Train`, desc: `Clear Level 28 — Bullet Train.` },
+    { id: `hologram_park`, name: `Hologram Park`, desc: `Clear Level 29 — Hologram Park.` },
+    { id: `neon_daimyo`, name: `Daimyo Down`, desc: `Perform Neon’s Thunder Fatality.` },
+    { id: `neon_world`, name: `City Dawn`, desc: `Clear all five Neon Tokyo levels.` },
   ],
   r = {
     kiba: {
@@ -293,6 +311,42 @@ var e = [
       reach: 204,
       scale: 1.52,
       fatality: `blue`,
+    },
+    homa: {
+      id: `homa`,
+      name: `HOMA`,
+      title: `OTD FLAME`,
+      say: `Homa. O.T.D. Flame.`,
+      hp: 1100,
+      speed: 108,
+      dmg: 24,
+      reach: 206,
+      scale: 1.54,
+      fatality: `thunder`,
+    },
+    yuki: {
+      id: `yuki`,
+      name: `YUKI`,
+      title: `OTD LORD`,
+      say: `Yuki. O.T.D. Lord.`,
+      hp: 1220,
+      speed: 112,
+      dmg: 24,
+      reach: 208,
+      scale: 1.56,
+      fatality: `blue`,
+    },
+    neon: {
+      id: `neon`,
+      name: `NEON`,
+      title: `OTD DAIMYO`,
+      say: `Neon. O.T.D. Daimyo.`,
+      hp: 1340,
+      speed: 118,
+      dmg: 26,
+      reach: 210,
+      scale: 1.58,
+      fatality: `thunder`,
     },
   },
   i = [
@@ -679,6 +733,174 @@ var e = [
           heal: !0,
         },
         { name: `Abbot Court`, theme: `boss`, boss: `kage` },
+      ],
+    },
+    {
+      id: 16,
+      name: `Cinder Path`,
+      achievement: `cinder_path`,
+      clearBonus: 150,
+      rooms: [
+        { name: `Ember Gate`, theme: `cinder`, foes: [`grunt`, `ninja`, `katana`], crates: 2 },
+        { name: `Ash Span`, theme: `ash`, foes: [`ninja`, `katana`, `ninja`], platforms: !0 },
+        { name: `Cinder Rest`, theme: `cinder`, foes: [`katana`, `grunt`, `katana`], heal: !0 },
+      ],
+    },
+    {
+      id: 17,
+      name: `Ash Bridge`,
+      achievement: `ash_bridge`,
+      clearBonus: 160,
+      rooms: [
+        { name: `Scorched Mile`, theme: `ash`, foes: [`ninja`, `katana`, `ninja`, `grunt`], crates: 1 },
+        { name: `Lava Boards`, theme: `ash`, foes: [`katana`, `ninja`, `katana`], platforms: !0, heal: !0 },
+        { name: `Far Cinder`, theme: `cinder`, foes: [`katana`, `katana`, `ninja`, `katana`] },
+      ],
+    },
+    {
+      id: 18,
+      name: `Magma Stairs`,
+      achievement: `magma_stairs`,
+      clearBonus: 170,
+      rooms: [
+        { name: `Stair Mouth`, theme: `magma`, foes: [`katana`, `ninja`, `katana`], crates: 1 },
+        { name: `Heat Walk`, theme: `cinder`, foes: [`ninja`, `katana`, `ninja`, `katana`], platforms: !0 },
+        { name: `Caldera Lip`, theme: `magma`, foes: [`katana`, `katana`, `grunt`, `ninja`], heal: !0 },
+      ],
+    },
+    {
+      id: 19,
+      name: `Forge Yard`,
+      achievement: `forge_yard`,
+      clearBonus: 180,
+      rooms: [
+        { name: `Anvil Row`, theme: `cinder`, foes: [`katana`, `katana`, `ninja`], crates: 2 },
+        { name: `Bellows Bridge`, theme: `ash`, foes: [`ninja`, `katana`, `ninja`, `katana`], platforms: !0, heal: !0 },
+        { name: `Quench Pit`, theme: `magma`, foes: [`katana`, `ninja`, `katana`, `katana`] },
+      ],
+    },
+    {
+      id: 20,
+      name: `Flame General`,
+      achievement: `flame_general`,
+      clearBonus: 200,
+      crystal: !0,
+      rooms: [
+        { name: `Banner Ash`, theme: `cinder`, foes: [`katana`, `ninja`, `katana`, `grunt`] },
+        { name: `Flame Bridge`, theme: `ash`, foes: [`ninja`, `katana`, `ninja`, `katana`], platforms: !0, heal: !0 },
+        { name: `General Court`, theme: `boss`, boss: `homa` },
+      ],
+    },
+    {
+      id: 21,
+      name: `Snow Gate`,
+      achievement: `snow_gate`,
+      clearBonus: 180,
+      rooms: [
+        { name: `Snow Arch`, theme: `snow`, foes: [`grunt`, `ninja`, `katana`], crates: 2 },
+        { name: `Drift Bridge`, theme: `ice`, foes: [`ninja`, `katana`, `ninja`], platforms: !0 },
+        { name: `Gate Snow`, theme: `snow`, foes: [`katana`, `grunt`, `katana`], heal: !0 },
+      ],
+    },
+    {
+      id: 22,
+      name: `Ice Canal`,
+      achievement: `ice_canal`,
+      clearBonus: 190,
+      rooms: [
+        { name: `Frozen Dock`, theme: `ice`, foes: [`ninja`, `katana`, `ninja`, `grunt`], crates: 1 },
+        { name: `Canal Boards`, theme: `ice`, foes: [`katana`, `ninja`, `katana`], platforms: !0, heal: !0 },
+        { name: `Lock House`, theme: `frost`, foes: [`katana`, `katana`, `ninja`, `katana`] },
+      ],
+    },
+    {
+      id: 23,
+      name: `Frost Shrine`,
+      achievement: `frost_shrine`,
+      clearBonus: 200,
+      rooms: [
+        { name: `Ice Steps`, theme: `frost`, foes: [`katana`, `ninja`, `katana`], crates: 1 },
+        { name: `Shrine Ice`, theme: `snow`, foes: [`ninja`, `katana`, `ninja`, `katana`], platforms: !0 },
+        { name: `Offering Snow`, theme: `frost`, foes: [`katana`, `katana`, `ninja`], heal: !0 },
+      ],
+    },
+    {
+      id: 24,
+      name: `Blizzard Keep`,
+      achievement: `blizzard_keep`,
+      clearBonus: 210,
+      rooms: [
+        { name: `Keep Wall`, theme: `snow`, foes: [`katana`, `ninja`, `katana`, `grunt`], crates: 1 },
+        { name: `White Court`, theme: `frost`, foes: [`ninja`, `katana`, `ninja`, `katana`], platforms: !0, heal: !0 },
+        { name: `Inner Drift`, theme: `ice`, foes: [`katana`, `katana`, `ninja`, `katana`] },
+      ],
+    },
+    {
+      id: 25,
+      name: `Winter Lord`,
+      achievement: `winter_lord`,
+      clearBonus: 230,
+      crystal: !0,
+      rooms: [
+        { name: `Lord Road`, theme: `snow`, foes: [`katana`, `ninja`, `katana`, `katana`] },
+        { name: `Throne Ice`, theme: `ice`, foes: [`ninja`, `katana`, `ninja`, `katana`], platforms: !0, heal: !0 },
+        { name: `Winter Court`, theme: `boss`, boss: `yuki` },
+      ],
+    },
+    {
+      id: 26,
+      name: `Rain Alley`,
+      achievement: `rain_alley`,
+      clearBonus: 210,
+      rooms: [
+        { name: `Neon Puddle`, theme: `rain`, foes: [`ninja`, `grunt`, `katana`], crates: 2 },
+        { name: `Sign Bridge`, theme: `roof`, foes: [`ninja`, `katana`, `ninja`], platforms: !0 },
+        { name: `Alley End`, theme: `rain`, foes: [`katana`, `ninja`, `katana`], heal: !0 },
+      ],
+    },
+    {
+      id: 27,
+      name: `Arcade Roof`,
+      achievement: `arcade_roof`,
+      clearBonus: 220,
+      rooms: [
+        { name: `Ticket Stair`, theme: `neon`, foes: [`ninja`, `katana`, `ninja`, `grunt`], crates: 1 },
+        { name: `Roof Run`, theme: `roof`, foes: [`katana`, `ninja`, `katana`], platforms: !0, heal: !0 },
+        { name: `Billboard`, theme: `neon`, foes: [`katana`, `katana`, `ninja`, `katana`] },
+      ],
+    },
+    {
+      id: 28,
+      name: `Bullet Train`,
+      achievement: `bullet_train`,
+      clearBonus: 230,
+      rooms: [
+        { name: `Platform 3`, theme: `rain`, foes: [`katana`, `ninja`, `katana`], crates: 1 },
+        { name: `Car Roof`, theme: `roof`, foes: [`ninja`, `katana`, `ninja`, `katana`], platforms: !0 },
+        { name: `Last Car`, theme: `neon`, foes: [`katana`, `katana`, `ninja`, `grunt`], heal: !0 },
+      ],
+    },
+    {
+      id: 29,
+      name: `Hologram Park`,
+      achievement: `hologram_park`,
+      clearBonus: 240,
+      rooms: [
+        { name: `Gate Lights`, theme: `neon`, foes: [`ninja`, `katana`, `ninja`, `katana`], crates: 2 },
+        { name: `Fountain Walk`, theme: `rain`, foes: [`katana`, `ninja`, `katana`], platforms: !0, heal: !0 },
+        { name: `Holo Court`, theme: `neon`, foes: [`katana`, `katana`, `ninja`, `katana`] },
+      ],
+    },
+    {
+      id: 30,
+      name: `Neon Daimyo`,
+      achievement: `neon_daimyo`,
+      clearBonus: 260,
+      crystal: !0,
+      rooms: [
+        { name: `Daimyo Street`, theme: `rain`, foes: [`katana`, `ninja`, `katana`, `katana`] },
+        { name: `Tower Bridge`, theme: `roof`, foes: [`ninja`, `katana`, `ninja`, `katana`], platforms: !0, heal: !0 },
+        { name: `Daimyo Court`, theme: `boss`, boss: `neon` },
       ],
     },
   ];
@@ -1779,7 +2001,79 @@ function j(e) {
                       ground: `#1c1828`,
                       path: `#3a3448`,
                     }
-                  : {
+                  : e === `cinder`
+                    ? {
+                        top: `#c45a32`,
+                        mid: `#f0a060`,
+                        horizon: `#ffd0a0`,
+                        ground: `#6a3a28`,
+                        path: `#a86840`,
+                      }
+                    : e === `ash`
+                      ? {
+                          top: `#8a4030`,
+                          mid: `#d07048`,
+                          horizon: `#f0b080`,
+                          ground: `#4a2820`,
+                          path: `#8a5040`,
+                        }
+                      : e === `magma`
+                        ? {
+                            top: `#6a2018`,
+                            mid: `#c04028`,
+                            horizon: `#ffb060`,
+                            ground: `#3a1814`,
+                            path: `#7a3828`,
+                          }
+                        : e === `snow`
+                          ? {
+                              top: `#c5d8ea`,
+                              mid: `#eef4fb`,
+                              horizon: `#f7fbff`,
+                              ground: `#d5e4ef`,
+                              path: `#f4f8fc`,
+                            }
+                          : e === `ice`
+                            ? {
+                                top: `#8eb4d4`,
+                                mid: `#d5e8f6`,
+                                horizon: `#f3fbff`,
+                                ground: `#b9d4e6`,
+                                path: `#e7f3fb`,
+                              }
+                            : e === `frost`
+                              ? {
+                                  top: `#9aaed0`,
+                                  mid: `#d8e2f4`,
+                                  horizon: `#f4f0ff`,
+                                  ground: `#c5d0e4`,
+                                  path: `#e8eef8`,
+                                }
+                              : e === `rain`
+                                ? {
+                                    top: `#12182c`,
+                                    mid: `#243058`,
+                                    horizon: `#ff4fa3`,
+                                    ground: `#1a2030`,
+                                    path: `#2a3348`,
+                                  }
+                                : e === `neon`
+                                  ? {
+                                      top: `#0c1024`,
+                                      mid: `#1a2050`,
+                                      horizon: `#20f0d0`,
+                                      ground: `#141828`,
+                                      path: `#22283c`,
+                                    }
+                                  : e === `roof`
+                                    ? {
+                                        top: `#101428`,
+                                        mid: `#2a2060`,
+                                        horizon: `#ff7ad0`,
+                                        ground: `#1c1830`,
+                                        path: `#2c2844`,
+                                      }
+                                    : {
               top: `#8ec6ea`,
               mid: `#f7d5e2`,
               horizon: `#ffe6c4`,
@@ -1801,19 +2095,45 @@ function M(e, t) {
     e.fillRect(r - 800, i - 800, a + 1600, 640 - i + 900));
   let c = r + a * 0.78,
     l = i + t.viewH * 0.16,
-    u = e.createRadialGradient(c, l, 10, c, l, 90);
-  (u.addColorStop(0, `rgba(255,244,210,0.95)`),
-    u.addColorStop(1, `rgba(255,244,210,0)`),
+    u = e.createRadialGradient(c, l, 10, c, l, 90),
+    hot = n.theme === `cinder` || n.theme === `ash` || n.theme === `magma`,
+    cold = n.theme === `snow` || n.theme === `ice` || n.theme === `frost`,
+    city = n.theme === `rain` || n.theme === `neon` || n.theme === `roof`;
+  (u.addColorStop(
+    0,
+    hot
+      ? `rgba(255,190,90,0.95)`
+      : cold
+        ? `rgba(236,246,255,0.95)`
+        : city
+          ? `rgba(140,255,230,0.75)`
+          : `rgba(255,244,210,0.95)`,
+  ),
+    u.addColorStop(
+      1,
+      hot
+        ? `rgba(255,120,40,0)`
+        : cold
+          ? `rgba(236,246,255,0)`
+          : city
+            ? `rgba(80,40,180,0)`
+            : `rgba(255,244,210,0)`,
+    ),
     (e.fillStyle = u),
     e.beginPath(),
     e.arc(c, l, 90, 0, Math.PI * 2),
     e.fill(),
-    (e.fillStyle =
-      n.theme === `boss` || n.theme === `shadow` || n.theme === `ink`
-        ? `rgba(40,28,70,0.62)`
-        : n.theme === `bamboo` || n.theme === `grove`
-          ? `rgba(40,90,50,0.45)`
-          : `rgba(170,150,180,0.45)`));
+    (e.fillStyle = hot
+      ? `rgba(120,40,24,0.55)`
+      : cold
+        ? `rgba(170,196,214,0.55)`
+        : city
+          ? `rgba(16,18,48,0.7)`
+          : n.theme === `boss` || n.theme === `shadow` || n.theme === `ink`
+            ? `rgba(40,28,70,0.62)`
+            : n.theme === `bamboo` || n.theme === `grove`
+              ? `rgba(40,90,50,0.45)`
+              : `rgba(170,150,180,0.45)`));
   for (let t = 0; t < 5; t++) {
     let n = r * 0.55 + t * 280 - 40;
     (e.beginPath(),
@@ -1839,8 +2159,20 @@ function M(e, t) {
       e.fill());
   }
   for (let t of n.houses || []) ee(e, t.x, 634, t.w);
-  if (n.theme === `bridge` || n.theme === `grove`) {
-    ((e.fillStyle = n.theme === `grove` ? `#2f6d58` : `#7eb7d4`),
+  if (
+    n.theme === `bridge` ||
+    n.theme === `grove` ||
+    n.theme === `ash` ||
+    n.theme === `ice`
+  ) {
+    ((e.fillStyle =
+      n.theme === `grove`
+        ? `#2f6d58`
+        : n.theme === `ash`
+          ? `#c4512a`
+          : n.theme === `ice`
+            ? `#d7eefe`
+            : `#7eb7d4`),
       e.fillRect(r - 100, 490, a + 200, 70),
       (e.strokeStyle = `rgba(255,255,255,0.45)`),
       (e.lineWidth = 2));
@@ -1893,17 +2225,71 @@ function M(e, t) {
         e.lineTo(t.x - 22 * t.s, 424),
         e.stroke(),
         e.restore());
+    } else if (hot) {
+      (e.save(),
+        (e.strokeStyle = `#3a2018`),
+        (e.lineWidth = 8 * t.s),
+        (e.lineCap = `round`),
+        e.beginPath(),
+        e.moveTo(t.x, 640),
+        e.lineTo(t.x + 4, 640 - 150 * t.s),
+        e.stroke(),
+        (e.fillStyle = `#ffb060`),
+        e.beginPath(),
+        e.arc(t.x + 4, 640 - 150 * t.s, 8 * t.s, 0, Math.PI * 2),
+        e.fill(),
+        e.restore());
+    } else if (cold) {
+      (e.save(),
+        (e.fillStyle = `#f7fbff`),
+        e.beginPath(),
+        e.moveTo(t.x, 640),
+        e.lineTo(t.x + 10 * t.s, 640 - 160 * t.s),
+        e.lineTo(t.x + 22 * t.s, 640),
+        e.fill(),
+        (e.fillStyle = `#d5e8f6`),
+        e.beginPath(),
+        e.moveTo(t.x + 16, 640),
+        e.lineTo(t.x + 24, 640 - 110 * t.s),
+        e.lineTo(t.x + 34, 640),
+        e.fill(),
+        e.restore());
+    } else if (city) {
+      (e.save(),
+        (e.strokeStyle = `#7ef0ff`),
+        (e.lineWidth = 4),
+        e.beginPath(),
+        e.moveTo(t.x, 640),
+        e.lineTo(t.x, 640 - 180 * t.s),
+        e.stroke(),
+        (e.fillStyle = `#ff7ad9`),
+        e.fillRect(t.x - 16 * t.s, 640 - 170 * t.s, 32 * t.s, 10),
+        e.restore());
     } else O(e, t.x, 640, t.s, t.seed);
   }
   for (let r of n.lanterns || []) A(e, r.x, 640, t.time);
   if (
     ((e.fillStyle = o.ground),
     e.fillRect(r - 400, 640, a + 800, 500),
-    n.theme === `bridge` || n.theme === `grove`)
+    n.theme === `bridge` ||
+    n.theme === `grove` ||
+    n.theme === `ash` ||
+    n.theme === `ice`)
   ) {
     e.fillStyle = `#7a4e34`;
     for (let t = r - (r % 28); t < r + a + 40; t += 28)
-      ((e.fillStyle = t % 56 < 28 ? `#8d5a3a` : `#73482e`),
+      ((e.fillStyle =
+        n.theme === `ice`
+          ? t % 56 < 28
+            ? `#e7f3fb`
+            : `#c5d8ea`
+          : n.theme === `ash`
+            ? t % 56 < 28
+              ? `#5a3028`
+              : `#3a201c`
+            : t % 56 < 28
+              ? `#8d5a3a`
+              : `#73482e`),
         e.fillRect(t, 640, 26, 80));
     ((e.strokeStyle = `#4e2e1e`),
       (e.lineWidth = 4),
@@ -2335,19 +2721,22 @@ function ce(e, t, n, r) {
     a = m((n || 1) * 997 + Math.floor(t)),
     o = [],
     g = e === `bamboo` || e === `grove`,
-    _ = e === `shadow` || e === `ink`;
-  for (let t = 40; t < i; t += g ? 140 : e === `night` || _ ? 200 : 230)
+    _ = e === `shadow` || e === `ink`,
+    hot = e === `cinder` || e === `ash` || e === `magma`,
+    cold = e === `snow` || e === `ice` || e === `frost`,
+    city = e === `rain` || e === `neon` || e === `roof`;
+  for (let t = 40; t < i; t += g ? 140 : e === `night` || _ || city ? 200 : hot || cold ? 260 : 230)
     o.push({
       x: t + a() * 50,
       s: 0.75 + a() * 0.55,
       seed: Math.floor(a() * 99999),
     });
   let s = [];
-  if (e !== `boss` && !g && !_)
+  if (e !== `boss` && !g && !_ && !hot && !cold)
     for (let e = 0; e < 3; e++)
       s.push({ x: 180 + (i / 3.4) * e, w: 150 + a() * 40 });
   let c = [],
-    l = e === `night` || _ ? 150 : g ? 220 : 280;
+    l = e === `night` || _ || city ? 150 : g ? 220 : 280;
   for (let e = 120; e < i; e += l) c.push({ x: e });
   let u = [];
   for (let e = 0; e < 4; e++)
@@ -3051,8 +3440,21 @@ function q() {
     ((T.calloutT = 0), (T.calloutPri = 0), (T.roomIndex = e));
     let i = ce(n.theme, T.viewW, t.id * 100 + e + 3, !!n.platforms);
     ((i.name = n.name),
-      (T.room = i),
-      (T.enemies = []),
+      (T.room = i));
+    {
+      let hot = n.theme === `cinder` || n.theme === `ash` || n.theme === `magma`,
+        cold = n.theme === `snow` || n.theme === `ice` || n.theme === `frost`,
+        city = n.theme === `rain` || n.theme === `neon` || n.theme === `roof`,
+        colors = hot
+          ? [`#ffb07a`, `#ffd2a8`]
+          : cold
+            ? [`#f4fbff`, `#d5e8f8`]
+            : city
+              ? [`#7ef0ff`, `#ff7ad9`]
+              : [`#ffb7c5`, `#fff0f5`];
+      for (let p of T.petals) p.color = colors[p.front ? 0 : 1];
+    }
+    ((T.enemies = []),
       (T.projectiles = []),
       (T.props = []),
       (T.pickups = []),
@@ -3278,7 +3680,7 @@ function q() {
   }
   function _e() {
     E(`upgrade-wallet`).textContent =
-      `${v.coins} coins  ·  LV ${W(v.xp)}  ·  Sakura ${[1, 2, 3, 4, 5].filter((e) => v.cleared.includes(e)).length}/5  ·  Bamboo ${[6, 7, 8, 9, 10].filter((e) => v.cleared.includes(e)).length}/5  ·  Shadow ${[11, 12, 13, 14, 15].filter((e) => v.cleared.includes(e)).length}/5. Thunder Strike is unlocked. Other arts are later stages.`;
+      `${v.coins} coins  ·  LV ${W(v.xp)}  ·  Levels cleared ${v.cleared.length}/${i.length}. Thunder Strike is unlocked. Other arts are later stages.`;
     let e = E(`upgrade-list`);
     e.innerHTML = ``;
     for (let n of t) {
@@ -4445,6 +4847,12 @@ function q() {
       [6, 7, 8, 9, 10].every((e) => v.cleared.includes(e)) && N(`bamboo_world`),
       [11, 12, 13, 14, 15].every((e) => v.cleared.includes(e)) &&
         N(`shadow_world`),
+      [16, 17, 18, 19, 20].every((e) => v.cleared.includes(e)) &&
+        N(`fire_world`),
+      [21, 22, 23, 24, 25].every((e) => v.cleared.includes(e)) &&
+        N(`frost_world`),
+      [26, 27, 28, 29, 30].every((e) => v.cleared.includes(e)) &&
+        N(`neon_world`),
       T.damageTaken <= 0 && N(`untouched`),
       D(),
       _.setMode(`village`),
@@ -4456,7 +4864,7 @@ function q() {
         `Max combo ${T.comboBest}  ·  ${h(T.runT)}  ·  +${T.runCoins} coins  ·  +${T.runXp} XP${r && t.crystal ? `  ·  +1 crystal` : ``}${r && t.clearBonus ? `  ·  clear bonus +${t.clearBonus}` : ``}`),
       (E(`vic-note`).textContent = T.nextLevelId
         ? `Level ${T.nextLevelId} — ${a(T.nextLevelId).name} is unlocked. Levels ${i.length + 1}–50 are not in this build.`
-        : `Stage 3 ends at level ${i.length}. Levels ${i.length + 1}–50 are not built.`),
+        : `This build ends at level ${i.length}. Levels ${i.length + 1}–50 are not built.`),
       E(`btn-vic-next`).classList.toggle(`hidden`, !T.nextLevelId),
       T.nextLevelId &&
         (E(`btn-vic-next`).textContent = `LEVEL ${T.nextLevelId}`),

@@ -1,6 +1,6 @@
 # COCORO: SAMURAI LEGEND
 
-Stage 3 static build. Levels 1–15 are playable and unlock in order: Sakura Village, Bamboo Forest, and Shadow Temple. Levels 16–50 are not in this build.
+Stage 4 static build. Levels 1–30 are playable and unlock in order, from Sakura Village through Neon Tokyo. Levels 31–50 are not in this build.
 
 Play: https://30032021Timur.github.io/cocoro-samurai-legend/
 

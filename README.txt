@@ -1,7 +1,7 @@
-COCORO: SAMURAI LEGEND — Stage 3 static build
+COCORO: SAMURAI LEGEND — Stage 4 static build
 
-Levels 1–15: Sakura Village, Bamboo Forest, Shadow Temple.
-Levels 16–50 are not in this build.
+Levels 1–30 unlock in order: Sakura Village, Bamboo Forest, Shadow Temple, Fire Mountains, Frozen Kingdom, Neon Tokyo.
+Levels 31–50 are not in this build.
 
 Serve this folder with a local HTTP server. Do not open index.html as a file.
 
