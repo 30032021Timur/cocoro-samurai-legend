@@ -1,7 +1,7 @@
 {
   "name": "COCORO: SAMURAI LEGEND",
   "short_name": "COCORO",
-  "description": "Stage 4. Levels 1–30, Sakura Village through Neon Tokyo. Black-and-tan Shiba samurai versus yellow OTD demons.",
+  "description": "All 50 levels across ten worlds. Black-and-tan Shiba samurai versus yellow OTD demons.",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",

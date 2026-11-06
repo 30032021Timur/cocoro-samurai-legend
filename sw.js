@@ -1,4 +1,4 @@
-const CACHE = 'cocoro-samurai-legend-s4';
+const CACHE = 'cocoro-samurai-legend-s5';
 const ASSETS = [
   './',
   './index.html',

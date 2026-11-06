@@ -262,6 +262,30 @@ var e = [
     { id: `hologram_park`, name: `Hologram Park`, desc: `Clear Level 29 — Hologram Park.` },
     { id: `neon_daimyo`, name: `Daimyo Down`, desc: `Perform Neon’s Thunder Fatality.` },
     { id: `neon_world`, name: `City Dawn`, desc: `Clear all five Neon Tokyo levels.` },
+    { id: `scale_ridge`, name: `Scale Ridge`, desc: `Clear Level 31 — Scale Ridge.` },
+    { id: `wind_nest`, name: `Wind Nest`, desc: `Clear Level 32 — Wind Nest.` },
+    { id: `bone_bridge`, name: `Bone Bridge`, desc: `Clear Level 33 — Bone Bridge.` },
+    { id: `ember_cave`, name: `Ember Cave`, desc: `Clear Level 34 — Ember Cave.` },
+    { id: `valley_drake`, name: `Drake Down`, desc: `Perform Ryu’s Fatality.` },
+    { id: `dragon_world`, name: `Valley Quiet`, desc: `Clear all five Dragon Valley levels.` },
+    { id: `iron_gate`, name: `Iron Gate`, desc: `Clear Level 36 — Iron Gate.` },
+    { id: `spike_court`, name: `Spike Court`, desc: `Clear Level 37 — Spike Court.` },
+    { id: `chain_bridge`, name: `Chain Bridge`, desc: `Clear Level 38 — Chain Bridge.` },
+    { id: `war_drum`, name: `War Drum`, desc: `Clear Level 39 — War Drum.` },
+    { id: `fortress_captain`, name: `Captain Broken`, desc: `Perform Kuro’s Thunder Fatality.` },
+    { id: `fort_world`, name: `Fortress Open`, desc: `Clear all five Demon Fortress levels.` },
+    { id: `void_pier`, name: `Void Pier`, desc: `Clear Level 41 — Void Pier.` },
+    { id: `mirror_stair`, name: `Mirror Stair`, desc: `Clear Level 42 — Mirror Stair.` },
+    { id: `starless_field`, name: `Starless Field`, desc: `Clear Level 43 — Starless Field.` },
+    { id: `eclipse_shrine`, name: `Eclipse Shrine`, desc: `Clear Level 44 — Eclipse Shrine.` },
+    { id: `dimension_fang`, name: `Fang Broken`, desc: `Perform Fang’s Fatality.` },
+    { id: `void_world`, name: `Dimension Shut`, desc: `Clear all five Dark Dimension levels.` },
+    { id: `gold_march`, name: `Gold March`, desc: `Clear Level 46 — Gold March.` },
+    { id: `banner_city`, name: `Banner City`, desc: `Clear Level 47 — Banner City.` },
+    { id: `throne_bridge`, name: `Throne Bridge`, desc: `Clear Level 48 — Throne Bridge.` },
+    { id: `empire_keep`, name: `Empire Keep`, desc: `Clear Level 49 — Empire Keep.` },
+    { id: `lord_otd`, name: `Legend Complete`, desc: `Perform Lord O.T.D.’s Thunder Fatality.` },
+    { id: `empire_world`, name: `Empire Dawn`, desc: `Clear all fifty levels.` },
   ],
   r = {
     kiba: {
@@ -346,6 +370,54 @@ var e = [
       dmg: 26,
       reach: 210,
       scale: 1.58,
+      fatality: `thunder`,
+    },
+    ryu: {
+      id: `ryu`,
+      name: `RYU`,
+      title: `OTD DRAKE`,
+      say: `Ryu. O.T.D. Drake.`,
+      hp: 1460,
+      speed: 120,
+      dmg: 26,
+      reach: 212,
+      scale: 1.6,
+      fatality: `blue`,
+    },
+    kuro: {
+      id: `kuro`,
+      name: `KURO`,
+      title: `OTD CAPTAIN`,
+      say: `Kuro. O.T.D. Captain.`,
+      hp: 1580,
+      speed: 116,
+      dmg: 28,
+      reach: 214,
+      scale: 1.62,
+      fatality: `thunder`,
+    },
+    fang: {
+      id: `fang`,
+      name: `FANG`,
+      title: `OTD FANG`,
+      say: `Fang. O.T.D. Fang.`,
+      hp: 1720,
+      speed: 124,
+      dmg: 28,
+      reach: 216,
+      scale: 1.64,
+      fatality: `blue`,
+    },
+    lord: {
+      id: `lord`,
+      name: `LORD`,
+      title: `OTD`,
+      say: `Lord O.T.D.`,
+      hp: 1900,
+      speed: 122,
+      dmg: 30,
+      reach: 220,
+      scale: 1.7,
       fatality: `thunder`,
     },
   },
@@ -901,6 +973,230 @@ var e = [
         { name: `Daimyo Street`, theme: `rain`, foes: [`katana`, `ninja`, `katana`, `katana`] },
         { name: `Tower Bridge`, theme: `roof`, foes: [`ninja`, `katana`, `ninja`, `katana`], platforms: !0, heal: !0 },
         { name: `Daimyo Court`, theme: `boss`, boss: `neon` },
+      ],
+    },
+    {
+      id: 31,
+      name: `Scale Ridge`,
+      achievement: `scale_ridge`,
+      clearBonus: 270,
+      rooms: [
+        { name: `Ridge Gate`, theme: `ridge`, foes: [`katana`, `ninja`, `katana`], crates: 2 },
+        { name: `Wind Shelf`, theme: `wind`, foes: [`ninja`, `katana`, `ninja`], platforms: !0 },
+        { name: `Scale Rest`, theme: `ridge`, foes: [`katana`, `grunt`, `katana`], heal: !0 },
+      ],
+    },
+    {
+      id: 32,
+      name: `Wind Nest`,
+      achievement: `wind_nest`,
+      clearBonus: 280,
+      rooms: [
+        { name: `Nest Mouth`, theme: `wind`, foes: [`ninja`, `katana`, `ninja`, `grunt`], crates: 1 },
+        { name: `High Nest`, theme: `ridge`, foes: [`katana`, `ninja`, `katana`], platforms: !0, heal: !0 },
+        { name: `Gale End`, theme: `wind`, foes: [`katana`, `katana`, `ninja`, `katana`] },
+      ],
+    },
+    {
+      id: 33,
+      name: `Bone Bridge`,
+      achievement: `bone_bridge`,
+      clearBonus: 290,
+      rooms: [
+        { name: `Bone Gate`, theme: `bone`, foes: [`katana`, `ninja`, `katana`], crates: 1 },
+        { name: `Spine Span`, theme: `bone`, foes: [`ninja`, `katana`, `ninja`, `katana`], platforms: !0 },
+        { name: `Far Rib`, theme: `ridge`, foes: [`katana`, `katana`, `ninja`], heal: !0 },
+      ],
+    },
+    {
+      id: 34,
+      name: `Ember Cave`,
+      achievement: `ember_cave`,
+      clearBonus: 300,
+      rooms: [
+        { name: `Cave Mouth`, theme: `ember`, foes: [`katana`, `ninja`, `katana`, `grunt`], crates: 1 },
+        { name: `Ember Walk`, theme: `ridge`, foes: [`ninja`, `katana`, `ninja`, `katana`], platforms: !0, heal: !0 },
+        { name: `Heart Fire`, theme: `ember`, foes: [`katana`, `katana`, `ninja`, `katana`] },
+      ],
+    },
+    {
+      id: 35,
+      name: `Valley Drake`,
+      achievement: `valley_drake`,
+      clearBonus: 320,
+      crystal: !0,
+      rooms: [
+        { name: `Drake Road`, theme: `ridge`, foes: [`katana`, `ninja`, `katana`, `katana`] },
+        { name: `Nest Bridge`, theme: `wind`, foes: [`ninja`, `katana`, `ninja`, `katana`], platforms: !0, heal: !0 },
+        { name: `Drake Court`, theme: `boss`, boss: `ryu` },
+      ],
+    },
+    {
+      id: 36,
+      name: `Iron Gate`,
+      achievement: `iron_gate`,
+      clearBonus: 300,
+      rooms: [
+        { name: `Iron Arch`, theme: `iron`, foes: [`katana`, `ninja`, `katana`], crates: 2 },
+        { name: `Wall Walk`, theme: `spike`, foes: [`ninja`, `katana`, `ninja`], platforms: !0 },
+        { name: `Gate Yard`, theme: `iron`, foes: [`katana`, `grunt`, `katana`], heal: !0 },
+      ],
+    },
+    {
+      id: 37,
+      name: `Spike Court`,
+      achievement: `spike_court`,
+      clearBonus: 310,
+      rooms: [
+        { name: `Spike Row`, theme: `spike`, foes: [`ninja`, `katana`, `ninja`, `katana`], crates: 1 },
+        { name: `Court Ledge`, theme: `iron`, foes: [`katana`, `ninja`, `katana`], platforms: !0, heal: !0 },
+        { name: `Last Spike`, theme: `spike`, foes: [`katana`, `katana`, `ninja`, `katana`] },
+      ],
+    },
+    {
+      id: 38,
+      name: `Chain Bridge`,
+      achievement: `chain_bridge`,
+      clearBonus: 320,
+      rooms: [
+        { name: `Chain Gate`, theme: `chain`, foes: [`katana`, `ninja`, `katana`], crates: 1 },
+        { name: `Chain Span`, theme: `chain`, foes: [`ninja`, `katana`, `ninja`, `katana`], platforms: !0 },
+        { name: `Far Tower`, theme: `iron`, foes: [`katana`, `katana`, `ninja`], heal: !0 },
+      ],
+    },
+    {
+      id: 39,
+      name: `War Drum`,
+      achievement: `war_drum`,
+      clearBonus: 330,
+      rooms: [
+        { name: `Drum Stair`, theme: `drum`, foes: [`katana`, `ninja`, `katana`, `grunt`], crates: 1 },
+        { name: `Drum Court`, theme: `spike`, foes: [`ninja`, `katana`, `ninja`, `katana`], platforms: !0, heal: !0 },
+        { name: `War Yard`, theme: `drum`, foes: [`katana`, `katana`, `ninja`, `katana`] },
+      ],
+    },
+    {
+      id: 40,
+      name: `Fortress Captain`,
+      achievement: `fortress_captain`,
+      clearBonus: 350,
+      crystal: !0,
+      rooms: [
+        { name: `Captain Road`, theme: `iron`, foes: [`katana`, `ninja`, `katana`, `katana`] },
+        { name: `Keep Bridge`, theme: `chain`, foes: [`ninja`, `katana`, `ninja`, `katana`], platforms: !0, heal: !0 },
+        { name: `Captain Court`, theme: `boss`, boss: `kuro` },
+      ],
+    },
+    {
+      id: 41,
+      name: `Void Pier`,
+      achievement: `void_pier`,
+      clearBonus: 340,
+      rooms: [
+        { name: `Pier End`, theme: `void`, foes: [`ninja`, `katana`, `ninja`], crates: 2 },
+        { name: `Black Water`, theme: `mirror`, foes: [`katana`, `ninja`, `katana`], platforms: !0 },
+        { name: `Far Dock`, theme: `void`, foes: [`katana`, `grunt`, `katana`], heal: !0 },
+      ],
+    },
+    {
+      id: 42,
+      name: `Mirror Stair`,
+      achievement: `mirror_stair`,
+      clearBonus: 350,
+      rooms: [
+        { name: `Glass Step`, theme: `mirror`, foes: [`ninja`, `katana`, `ninja`, `katana`], crates: 1 },
+        { name: `Reflect Walk`, theme: `void`, foes: [`katana`, `ninja`, `katana`], platforms: !0, heal: !0 },
+        { name: `Last Mirror`, theme: `mirror`, foes: [`katana`, `katana`, `ninja`, `katana`] },
+      ],
+    },
+    {
+      id: 43,
+      name: `Starless Field`,
+      achievement: `starless_field`,
+      clearBonus: 360,
+      rooms: [
+        { name: `Dark Mile`, theme: `starless`, foes: [`katana`, `ninja`, `katana`], crates: 1 },
+        { name: `No Horizon`, theme: `void`, foes: [`ninja`, `katana`, `ninja`, `katana`], platforms: !0 },
+        { name: `Field Heart`, theme: `starless`, foes: [`katana`, `katana`, `ninja`], heal: !0 },
+      ],
+    },
+    {
+      id: 44,
+      name: `Eclipse Shrine`,
+      achievement: `eclipse_shrine`,
+      clearBonus: 370,
+      rooms: [
+        { name: `Eclipse Step`, theme: `eclipse`, foes: [`katana`, `ninja`, `katana`, `grunt`], crates: 1 },
+        { name: `Red Court`, theme: `starless`, foes: [`ninja`, `katana`, `ninja`, `katana`], platforms: !0, heal: !0 },
+        { name: `Shrine Dark`, theme: `eclipse`, foes: [`katana`, `katana`, `ninja`, `katana`] },
+      ],
+    },
+    {
+      id: 45,
+      name: `Dimension Fang`,
+      achievement: `dimension_fang`,
+      clearBonus: 390,
+      crystal: !0,
+      rooms: [
+        { name: `Fang Road`, theme: `void`, foes: [`katana`, `ninja`, `katana`, `katana`] },
+        { name: `Rift Bridge`, theme: `mirror`, foes: [`ninja`, `katana`, `ninja`, `katana`], platforms: !0, heal: !0 },
+        { name: `Fang Court`, theme: `boss`, boss: `fang` },
+      ],
+    },
+    {
+      id: 46,
+      name: `Gold March`,
+      achievement: `gold_march`,
+      clearBonus: 380,
+      rooms: [
+        { name: `Gold Gate`, theme: `gold`, foes: [`katana`, `ninja`, `katana`], crates: 2 },
+        { name: `Parade Span`, theme: `banner`, foes: [`ninja`, `katana`, `ninja`], platforms: !0 },
+        { name: `March End`, theme: `gold`, foes: [`katana`, `grunt`, `katana`], heal: !0 },
+      ],
+    },
+    {
+      id: 47,
+      name: `Banner City`,
+      achievement: `banner_city`,
+      clearBonus: 390,
+      rooms: [
+        { name: `Banner Row`, theme: `banner`, foes: [`ninja`, `katana`, `ninja`, `katana`], crates: 1 },
+        { name: `Roof Parade`, theme: `gold`, foes: [`katana`, `ninja`, `katana`], platforms: !0, heal: !0 },
+        { name: `City Heart`, theme: `banner`, foes: [`katana`, `katana`, `ninja`, `katana`] },
+      ],
+    },
+    {
+      id: 48,
+      name: `Throne Bridge`,
+      achievement: `throne_bridge`,
+      clearBonus: 400,
+      rooms: [
+        { name: `Throne Gate`, theme: `throne`, foes: [`katana`, `ninja`, `katana`], crates: 1 },
+        { name: `Gold Span`, theme: `throne`, foes: [`ninja`, `katana`, `ninja`, `katana`], platforms: !0 },
+        { name: `Far Keep`, theme: `keep`, foes: [`katana`, `katana`, `ninja`], heal: !0 },
+      ],
+    },
+    {
+      id: 49,
+      name: `Empire Keep`,
+      achievement: `empire_keep`,
+      clearBonus: 410,
+      rooms: [
+        { name: `Keep Stair`, theme: `keep`, foes: [`katana`, `ninja`, `katana`, `grunt`], crates: 1 },
+        { name: `Inner Court`, theme: `gold`, foes: [`ninja`, `katana`, `ninja`, `katana`], platforms: !0, heal: !0 },
+        { name: `Last Hall`, theme: `keep`, foes: [`katana`, `katana`, `ninja`, `katana`] },
+      ],
+    },
+    {
+      id: 50,
+      name: `Lord OTD`,
+      achievement: `lord_otd`,
+      clearBonus: 500,
+      crystal: !0,
+      rooms: [
+        { name: `Empire Road`, theme: `gold`, foes: [`katana`, `ninja`, `katana`, `katana`] },
+        { name: `Throne Walk`, theme: `throne`, foes: [`ninja`, `katana`, `ninja`, `katana`], platforms: !0, heal: !0 },
+        { name: `Lord Court`, theme: `boss`, boss: `lord` },
       ],
     },
   ];
@@ -1937,6 +2233,25 @@ function A(e, t, n, r) {
     e.fillRect(t - 8, n - 56, 16, 5));
 }
 function j(e) {
+  let extra = {
+    ridge: { top: `#c4a06a`, mid: `#e7d2a0`, horizon: `#f0e0c0`, ground: `#6a5a40`, path: `#c4a878` },
+    wind: { top: `#8ec8b0`, mid: `#d7efc8`, horizon: `#fff2c8`, ground: `#5a8a62`, path: `#c8d8a0` },
+    bone: { top: `#d8d0c4`, mid: `#efe8dc`, horizon: `#f7f2ea`, ground: `#c8c0b4`, path: `#e8e0d4` },
+    ember: { top: `#a04028`, mid: `#e07840`, horizon: `#ffc090`, ground: `#5a3024`, path: `#a06040` },
+    iron: { top: `#3a4048`, mid: `#6a7078`, horizon: `#a0a8b0`, ground: `#2a3038`, path: `#4a5058` },
+    spike: { top: `#2a2428`, mid: `#5a4048`, horizon: `#c06060`, ground: `#241c20`, path: `#3a3034` },
+    chain: { top: `#343038`, mid: `#6a5a58`, horizon: `#d0a090`, ground: `#2a282c`, path: `#4a4448` },
+    drum: { top: `#4a2830`, mid: `#8a4048`, horizon: `#e0a0a0`, ground: `#3a2428`, path: `#6a4044` },
+    void: { top: `#07060e`, mid: `#1a1030`, horizon: `#402060`, ground: `#100e18`, path: `#1c1828` },
+    mirror: { top: `#101828`, mid: `#304060`, horizon: `#80c0e0`, ground: `#141820`, path: `#243040` },
+    starless: { top: `#05060a`, mid: `#101018`, horizon: `#202030`, ground: `#0c0c12`, path: `#181820` },
+    eclipse: { top: `#1a0810`, mid: `#6a2030`, horizon: `#ffb070`, ground: `#14080c`, path: `#3a2024` },
+    gold: { top: `#c4a050`, mid: `#f0d890`, horizon: `#fff4c8`, ground: `#8a7040`, path: `#e0c070` },
+    banner: { top: `#8a2030`, mid: `#d05050`, horizon: `#f0c070`, ground: `#6a3030`, path: `#c08050` },
+    throne: { top: `#6a4820`, mid: `#d0a050`, horizon: `#ffe0a0`, ground: `#5a4020`, path: `#c09040` },
+    keep: { top: `#4a3828`, mid: `#a08050`, horizon: `#f0d8a0`, ground: `#3a3024`, path: `#b09060` },
+  };
+  if (extra[e]) return extra[e];
   return e === `boss`
     ? {
         top: `#6d7ea8`,
@@ -2098,32 +2413,56 @@ function M(e, t) {
     u = e.createRadialGradient(c, l, 10, c, l, 90),
     hot = n.theme === `cinder` || n.theme === `ash` || n.theme === `magma`,
     cold = n.theme === `snow` || n.theme === `ice` || n.theme === `frost`,
-    city = n.theme === `rain` || n.theme === `neon` || n.theme === `roof`;
+    city = n.theme === `rain` || n.theme === `neon` || n.theme === `roof`,
+    dragon = n.theme === `ridge` || n.theme === `wind` || n.theme === `bone` || n.theme === `ember`,
+    fort = n.theme === `iron` || n.theme === `spike` || n.theme === `chain` || n.theme === `drum`,
+    abyss = n.theme === `void` || n.theme === `mirror` || n.theme === `starless` || n.theme === `eclipse`,
+    empire = n.theme === `gold` || n.theme === `banner` || n.theme === `throne` || n.theme === `keep`;
   (u.addColorStop(
     0,
-    hot
+    dragon || hot
       ? `rgba(255,190,90,0.95)`
       : cold
         ? `rgba(236,246,255,0.95)`
-        : city
-          ? `rgba(140,255,230,0.75)`
-          : `rgba(255,244,210,0.95)`,
+        : fort
+          ? `rgba(180,186,196,0.45)`
+          : abyss
+            ? `rgba(160,120,255,0.45)`
+            : empire
+              ? `rgba(255,214,120,0.9)`
+              : city
+                ? `rgba(140,255,230,0.75)`
+                : `rgba(255,244,210,0.95)`,
   ),
     u.addColorStop(
       1,
-      hot
+      dragon || hot
         ? `rgba(255,120,40,0)`
         : cold
           ? `rgba(236,246,255,0)`
-          : city
-            ? `rgba(80,40,180,0)`
-            : `rgba(255,244,210,0)`,
+          : fort
+            ? `rgba(40,40,48,0)`
+            : abyss
+              ? `rgba(40,10,60,0)`
+              : empire
+                ? `rgba(160,80,20,0)`
+                : city
+                  ? `rgba(80,40,180,0)`
+                  : `rgba(255,244,210,0)`,
     ),
     (e.fillStyle = u),
     e.beginPath(),
     e.arc(c, l, 90, 0, Math.PI * 2),
     e.fill(),
-    (e.fillStyle = hot
+    (e.fillStyle = dragon
+      ? `rgba(90,70,40,0.5)`
+      : fort
+        ? `rgba(30,32,40,0.62)`
+        : abyss
+          ? `rgba(8,6,16,0.75)`
+          : empire
+            ? `rgba(90,50,20,0.45)`
+            : hot
       ? `rgba(120,40,24,0.55)`
       : cold
         ? `rgba(170,196,214,0.55)`
@@ -2163,16 +2502,26 @@ function M(e, t) {
     n.theme === `bridge` ||
     n.theme === `grove` ||
     n.theme === `ash` ||
-    n.theme === `ice`
+    n.theme === `ice` ||
+    n.theme === `chain` ||
+    n.theme === `throne` ||
+    n.theme === `mirror` ||
+    n.theme === `bone`
   ) {
     ((e.fillStyle =
       n.theme === `grove`
         ? `#2f6d58`
         : n.theme === `ash`
           ? `#c4512a`
-          : n.theme === `ice`
+          : n.theme === `ice` || n.theme === `bone`
             ? `#d7eefe`
-            : `#7eb7d4`),
+            : n.theme === `chain`
+              ? `#3a4450`
+              : n.theme === `throne`
+                ? `#c09040`
+                : n.theme === `mirror`
+                  ? `#6ec8e0`
+                  : `#7eb7d4`),
       e.fillRect(r - 100, 490, a + 200, 70),
       (e.strokeStyle = `rgba(255,255,255,0.45)`),
       (e.lineWidth = 2));
@@ -2254,6 +2603,43 @@ function M(e, t) {
         e.lineTo(t.x + 34, 640),
         e.fill(),
         e.restore());
+    } else if (dragon) {
+      (e.save(),
+        (e.strokeStyle = n.theme === `bone` ? `#f4efe6` : `#3a2818`),
+        (e.lineWidth = 8 * t.s),
+        (e.lineCap = `round`),
+        e.beginPath(),
+        e.moveTo(t.x, 640),
+        e.lineTo(t.x + 8, 640 - 180 * t.s),
+        e.stroke(),
+        e.restore());
+    } else if (fort) {
+      (e.save(),
+        (e.fillStyle = `#2a2e36`),
+        e.fillRect(t.x - 6, 640 - 200 * t.s, 12, 200 * t.s),
+        (e.fillStyle = `#c06060`),
+        e.fillRect(t.x - 10, 640 - 200 * t.s, 20, 8),
+        e.restore());
+    } else if (abyss) {
+      (e.save(),
+        (e.strokeStyle = `#c8b0ff`),
+        (e.lineWidth = 3),
+        e.beginPath(),
+        e.moveTo(t.x, 640),
+        e.lineTo(t.x + 6, 640 - 210 * t.s),
+        e.stroke(),
+        e.restore());
+    } else if (empire) {
+      (e.save(),
+        (e.fillStyle = `#6a2030`),
+        e.fillRect(t.x - 3, 480, 6, 160),
+        (e.fillStyle = `#f0c14a`),
+        e.beginPath(),
+        e.moveTo(t.x, 470),
+        e.lineTo(t.x + 36 * t.s, 490),
+        e.lineTo(t.x, 510),
+        e.fill(),
+        e.restore());
     } else if (city) {
       (e.save(),
         (e.strokeStyle = `#7ef0ff`),
@@ -2274,7 +2660,11 @@ function M(e, t) {
     n.theme === `bridge` ||
     n.theme === `grove` ||
     n.theme === `ash` ||
-    n.theme === `ice`)
+    n.theme === `ice` ||
+    n.theme === `chain` ||
+    n.theme === `throne` ||
+    n.theme === `mirror` ||
+    n.theme === `bone`)
   ) {
     e.fillStyle = `#7a4e34`;
     for (let t = r - (r % 28); t < r + a + 40; t += 28)
@@ -2724,7 +3114,8 @@ function ce(e, t, n, r) {
     _ = e === `shadow` || e === `ink`,
     hot = e === `cinder` || e === `ash` || e === `magma`,
     cold = e === `snow` || e === `ice` || e === `frost`,
-    city = e === `rain` || e === `neon` || e === `roof`;
+    city = e === `rain` || e === `neon` || e === `roof`,
+    wild = [`ridge`, `wind`, `bone`, `ember`, `iron`, `spike`, `chain`, `drum`, `void`, `mirror`, `starless`, `eclipse`].includes(e);
   for (let t = 40; t < i; t += g ? 140 : e === `night` || _ || city ? 200 : hot || cold ? 260 : 230)
     o.push({
       x: t + a() * 50,
@@ -2732,7 +3123,7 @@ function ce(e, t, n, r) {
       seed: Math.floor(a() * 99999),
     });
   let s = [];
-  if (e !== `boss` && !g && !_ && !hot && !cold)
+  if (e !== `boss` && !g && !_ && !hot && !cold && !wild)
     for (let e = 0; e < 3; e++)
       s.push({ x: 180 + (i / 3.4) * e, w: 150 + a() * 40 });
   let c = [],
@@ -3445,13 +3836,23 @@ function q() {
       let hot = n.theme === `cinder` || n.theme === `ash` || n.theme === `magma`,
         cold = n.theme === `snow` || n.theme === `ice` || n.theme === `frost`,
         city = n.theme === `rain` || n.theme === `neon` || n.theme === `roof`,
-        colors = hot
+        dragon = n.theme === `ridge` || n.theme === `wind` || n.theme === `bone` || n.theme === `ember`,
+        fort = n.theme === `iron` || n.theme === `spike` || n.theme === `chain` || n.theme === `drum`,
+        abyss = n.theme === `void` || n.theme === `mirror` || n.theme === `starless` || n.theme === `eclipse`,
+        empire = n.theme === `gold` || n.theme === `banner` || n.theme === `throne` || n.theme === `keep`,
+        colors = hot || dragon
           ? [`#ffb07a`, `#ffd2a8`]
           : cold
             ? [`#f4fbff`, `#d5e8f8`]
             : city
               ? [`#7ef0ff`, `#ff7ad9`]
-              : [`#ffb7c5`, `#fff0f5`];
+              : fort
+                ? [`#d0d4dc`, `#8a909c`]
+                : abyss
+                  ? [`#c8b0ff`, `#6a5088`]
+                  : empire
+                    ? [`#ffe08a`, `#f0c14a`]
+                    : [`#ffb7c5`, `#fff0f5`];
       for (let p of T.petals) p.color = colors[p.front ? 0 : 1];
     }
     ((T.enemies = []),
@@ -4853,6 +5254,14 @@ function q() {
         N(`frost_world`),
       [26, 27, 28, 29, 30].every((e) => v.cleared.includes(e)) &&
         N(`neon_world`),
+      [31, 32, 33, 34, 35].every((e) => v.cleared.includes(e)) &&
+        N(`dragon_world`),
+      [36, 37, 38, 39, 40].every((e) => v.cleared.includes(e)) &&
+        N(`fort_world`),
+      [41, 42, 43, 44, 45].every((e) => v.cleared.includes(e)) &&
+        N(`void_world`),
+      [46, 47, 48, 49, 50].every((e) => v.cleared.includes(e)) &&
+        N(`empire_world`),
       T.damageTaken <= 0 && N(`untouched`),
       D(),
       _.setMode(`village`),
@@ -4863,8 +5272,8 @@ function q() {
       (E(`vic-detail`).textContent =
         `Max combo ${T.comboBest}  ·  ${h(T.runT)}  ·  +${T.runCoins} coins  ·  +${T.runXp} XP${r && t.crystal ? `  ·  +1 crystal` : ``}${r && t.clearBonus ? `  ·  clear bonus +${t.clearBonus}` : ``}`),
       (E(`vic-note`).textContent = T.nextLevelId
-        ? `Level ${T.nextLevelId} — ${a(T.nextLevelId).name} is unlocked. Levels ${i.length + 1}–50 are not in this build.`
-        : `This build ends at level ${i.length}. Levels ${i.length + 1}–50 are not built.`),
+        ? `Level ${T.nextLevelId} — ${a(T.nextLevelId).name} is unlocked.`
+        : `All 50 levels are clear. Ten worlds finished.`),
       E(`btn-vic-next`).classList.toggle(`hidden`, !T.nextLevelId),
       T.nextLevelId &&
         (E(`btn-vic-next`).textContent = `LEVEL ${T.nextLevelId}`),

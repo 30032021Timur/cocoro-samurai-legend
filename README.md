@@ -1,6 +1,6 @@
 # COCORO: SAMURAI LEGEND
 
-Stage 4 static build. Levels 1–30 are playable and unlock in order, from Sakura Village through Neon Tokyo. Levels 31–50 are not in this build.
+All 50 levels are playable and unlock in order, across ten worlds from Sakura Village to the OTD Empire.
 
 Play: https://30032021Timur.github.io/cocoro-samurai-legend/
 
