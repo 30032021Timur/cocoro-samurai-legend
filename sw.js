@@ -1,8 +1,10 @@
-const CACHE = 'cocoro-samurai-legend-s1';
+const CACHE = 'cocoro-samurai-legend-s3';
 const ASSETS = [
   './',
   './index.html',
   './manifest.json',
+  './assets/game.js',
+  './assets/index-aIIx045X.css',
   './icons/favicon.png',
   './icons/icon-180.png',
   './icons/icon-192.png',

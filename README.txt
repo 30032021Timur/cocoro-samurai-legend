@@ -1,6 +1,7 @@
-COCORO: SAMURAI LEGEND — Stage 2 static build
+COCORO: SAMURAI LEGEND — Stage 3 static build
 
-Sakura Village levels 1–5. Worlds 2–10 are not in this build.
+Levels 1–15: Sakura Village, Bamboo Forest, Shadow Temple.
+Levels 16–50 are not in this build.
 
 Serve this folder with a local HTTP server. Do not open index.html as a file.
 
@@ -8,5 +9,5 @@ Serve this folder with a local HTTP server. Do not open index.html as a file.
 
 Then open http://127.0.0.1:47321
 
-GitHub Pages (after this build is on main):
+GitHub Pages:
   https://30032021Timur.github.io/cocoro-samurai-legend/

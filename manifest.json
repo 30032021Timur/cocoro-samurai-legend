@@ -1,7 +1,7 @@
 {
   "name": "COCORO: SAMURAI LEGEND",
   "short_name": "COCORO",
-  "description": "Stage 1 prototype. Black-and-tan Shiba samurai versus yellow OTD demons in Sakura Village.",
+  "description": "Stage 3. Sakura Village, Bamboo Forest, and Shadow Temple. Black-and-tan Shiba samurai versus yellow OTD demons.",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
