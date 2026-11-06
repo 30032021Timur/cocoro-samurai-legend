@@ -19,11 +19,11 @@ const SLOTS = [
   { x: 0.1, z: -8.8 },
 ];
 const KINDS = {
-  samurai: { hp: 42, speed: 3.1, damage: 8, range: 1.55, windup: 0.42, recover: 0.34, cool: 0.95, scale: 0.98, hurt: 0.3, role: 'samurai', guard: true, body: 0x1c140f, dark: 0x8a1c24, belly: 0xd7b189, ear: 0xf3e0c6, eye: 0xffe08a, armor: 0x9a1e24 },
-  ninja: { hp: 28, speed: 5.1, damage: 9, range: 1.65, windup: 0.26, recover: 0.28, cool: 0.75, scale: 0.92, hurt: 0.22, leap: true, role: 'ninja', body: 0x16161a, dark: 0xc4232e, belly: 0x2a2a30, ear: 0xf0b8c0, eye: 0xff6a6a, armor: 0x1a1a1e },
-  archer: { hp: 26, speed: 3.2, damage: 7, range: 7.2, windup: 0.48, recover: 0.4, cool: 1.25, scale: 0.94, hurt: 0.24, role: 'archer', ranged: true, body: 0xf4f1ea, dark: 0xc4232e, belly: 0xfff8f0, ear: 0xf7f4ef, eye: 0x66e0ff, armor: 0x8a1e24 },
-  heavy: { hp: 96, speed: 2.05, damage: 14, range: 1.9, windup: 0.58, recover: 0.5, cool: 1.15, scale: 1.12, hurt: 0.16, role: 'heavy', body: 0x6a5648, dark: 0x2a241c, belly: 0xe7d2b8, ear: 0xd7b189, eye: 0xffe08a, armor: 0x4a4e55 },
-  assassin: { hp: 32, speed: 4.3, damage: 8, range: 1.6, windup: 0.32, recover: 0.3, cool: 0.85, scale: 0.92, hurt: 0.22, role: 'assassin', poison: true, body: 0x2a2438, dark: 0x6a48a8, belly: 0x3a3450, ear: 0xd0b8e8, eye: 0xc9a6ff, armor: 0x3a2060 },
+  samurai: { hp: 42, speed: 3.1, damage: 8, range: 1.55, windup: 0.42, recover: 0.34, cool: 0.95, scale: 0.98, hurt: 0.3, role: 'samurai', guard: true, body: 0x1a120e, dark: 0x8a1c24, belly: 0xd7b189, ear: 0xf3e0c6, eye: 0xffe08a, armor: 0xc41e28 },
+  ninja: { hp: 28, speed: 5.1, damage: 9, range: 1.65, windup: 0.26, recover: 0.28, cool: 0.75, scale: 0.92, hurt: 0.22, leap: true, role: 'ninja', body: 0x101014, dark: 0xc4232e, belly: 0x1a1a20, ear: 0xf0b8c0, eye: 0xff6a6a, armor: 0x101014 },
+  archer: { hp: 26, speed: 3.2, damage: 7, range: 7.2, windup: 0.48, recover: 0.4, cool: 1.25, scale: 0.94, hurt: 0.24, role: 'archer', ranged: true, body: 0xf7f6f2, dark: 0xc4232e, belly: 0xfff8f0, ear: 0xf7f4ef, eye: 0x66e0ff, armor: 0xb01820 },
+  heavy: { hp: 96, speed: 2.05, damage: 14, range: 1.9, windup: 0.58, recover: 0.5, cool: 1.15, scale: 1.12, hurt: 0.16, role: 'heavy', body: 0x6a5648, dark: 0x2a241c, belly: 0xe7d2b8, ear: 0xd7b189, eye: 0xffe08a, armor: 0x7a8088 },
+  assassin: { hp: 32, speed: 4.3, damage: 8, range: 1.6, windup: 0.32, recover: 0.3, cool: 0.85, scale: 0.92, hurt: 0.22, role: 'assassin', poison: true, body: 0x241c30, dark: 0x6a48a8, belly: 0x3a3450, ear: 0xd0b8e8, eye: 0xc9a6ff, armor: 0x4a2878 },
   general: { hp: 280, speed: 2.45, damage: 13, range: 2.25, windup: 0.46, recover: 0.4, cool: 0.8, scale: 1.3, hurt: 0.12, role: 'general', body: 0x1c140f, dark: 0xb01c24, belly: 0xd7b189, ear: 0xf3e0c6, eye: 0xffe08a, armor: 0xe6c36a },
 };
 
@@ -288,7 +288,7 @@ function std(color, rough = 0.72, metal = 0.04, emissive = 0x000000) {
     canvas.width = 4;
     canvas.height = 1;
     const ctx = canvas.getContext('2d');
-    ['#5c5c66', '#9a9aa4', '#d8d8e0', '#ffffff'].forEach((paint, index) => {
+    ['#141418', '#32323a', '#55555e', '#787882'].forEach((paint, index) => {
       ctx.fillStyle = paint;
       ctx.fillRect(index, 0, 1, 1);
     });
@@ -300,7 +300,7 @@ function std(color, rough = 0.72, metal = 0.04, emissive = 0x000000) {
     color,
     gradientMap: toonMap,
     emissive,
-    emissiveIntensity: metal > 0.25 ? 0.35 : 0.08,
+    emissiveIntensity: emissive ? 0.4 : 0,
   });
   material.userData.baseEm = emissive;
   return material;
@@ -2540,7 +2540,7 @@ function boot() {
   sun.shadow.normalBias = 0.04;
   scene.add(sun);
   scene.add(sun.target);
-  const rim = new THREE.DirectionalLight(0xfff6e0, 1.8);
+  const rim = new THREE.DirectionalLight(0xfff6e0, 0.45);
   rim.position.set(-8, 6, 8);
   scene.add(rim);
   rimLight = rim;
@@ -2589,7 +2589,7 @@ function boot() {
 
   buildArena();
   buildHero();
-  const heroLight = new THREE.PointLight(0xfff6e4, 14, 7, 2);
+  const heroLight = new THREE.PointLight(0xfff6e4, 1.1, 7, 2);
   heroLight.position.set(0, 1.8, 0.6);
   hero.root.add(heroLight);
   for (const kind of ['samurai', 'ninja', 'archer']) {
@@ -2663,6 +2663,7 @@ function boot() {
     ready: true,
     player,
     cam,
+    hero,
     cats,
     progress,
     LEVELS,

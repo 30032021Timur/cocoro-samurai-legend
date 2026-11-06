@@ -1,4 +1,4 @@
-const CACHE = 'cocoro-3d-v5';
+const CACHE = 'cocoro-3d-v6';
 const ASSETS = [
   './',
   './index.html',

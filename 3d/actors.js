@@ -5,13 +5,14 @@ export function createHero(THREE, { std, addMesh, pivot, scene, blobMat, emblemT
   const model = new THREE.Group();
   root.add(spin);
   spin.add(model);
-  const black = std(0x1c140f, 0.84, 0.02);
-  const tan = std(0xd7b189, 0.82, 0);
-  const cream = std(0xf4e2c8, 0.8, 0);
-  const white = std(0xf7f4ef, 0.78, 0);
-  const armor = std(0x16120f, 0.38, 0.55);
-  const gold = std(0xe6c36a, 0.32, 0.7);
-  const red = std(0x9a1e24, 0.5, 0.15);
+  const black = std(0x0c0a09, 0.9, 0);
+  const tan = std(0xd0893a, 0.84, 0);
+  const cream = std(0xf3e0c4, 0.84, 0);
+  const white = std(0xf7f4ef, 0.82, 0);
+  const armor = std(0x0a0a0c, 0.42, 0.2);
+  const gold = std(0xc9a24a, 0.4, 0.35);
+  const red = std(0x6e1218, 0.55, 0);
+  const hakama = std(0x121018, 0.86, 0);
   const eyeWhite = std(0xf7f4ef, 0.4, 0.05);
 
   const legL = pivot(model, -0.16, 0.86, 0);
@@ -19,22 +20,26 @@ export function createHero(THREE, { std, addMesh, pivot, scene, blobMat, emblemT
   for (const [leg, tanLeg] of [[legL, true], [legR, false]]) {
     addMesh(leg, new THREE.CylinderGeometry(0.09, 0.08, 0.42, 8), armor, 0, -0.18, 0);
     addMesh(leg, new THREE.CylinderGeometry(0.07, 0.06, 0.28, 8), tan, 0, -0.48, 0);
-    addMesh(leg, new THREE.SphereGeometry(0.09, 8, 6), cream, 0, -0.64, 0.04);
+    addMesh(leg, new THREE.SphereGeometry(0.09, 8, 6), tan, 0, -0.64, 0.04);
     if (tanLeg) addMesh(leg, new THREE.TorusGeometry(0.09, 0.02, 6, 8), red, 0, -0.28, 0).rotation.x = Math.PI / 2;
   }
 
   const torso = addMesh(model, new THREE.SphereGeometry(0.28, 16, 12), black, 0, 1.12, 0);
   torso.scale.set(1.05, 1.15, 0.82);
   const chest = addMesh(model, new THREE.BoxGeometry(0.46, 0.5, 0.28), armor, 0, 1.16, 0.06);
-  addMesh(model, new THREE.BoxGeometry(0.5, 0.08, 0.3), gold, 0, 1.38, 0.06);
-  addMesh(model, new THREE.BoxGeometry(0.5, 0.08, 0.3), gold, 0, 0.96, 0.06);
-  addMesh(model, new THREE.BoxGeometry(0.06, 0.46, 0.08), red, -0.16, 1.16, 0.18);
-  addMesh(model, new THREE.BoxGeometry(0.06, 0.46, 0.08), red, 0.16, 1.16, 0.18);
-  const tanChest = addMesh(model, new THREE.SphereGeometry(0.12, 10, 8), tan, 0, 1.02, 0.16);
-  tanChest.scale.set(1.2, 0.8, 0.5);
+  addMesh(model, new THREE.BoxGeometry(0.48, 0.035, 0.3), gold, 0, 1.38, 0.07);
+  addMesh(model, new THREE.BoxGeometry(0.48, 0.035, 0.3), gold, 0, 0.96, 0.07);
+  addMesh(model, new THREE.BoxGeometry(0.045, 0.42, 0.04), red, -0.14, 1.16, 0.2);
+  addMesh(model, new THREE.BoxGeometry(0.045, 0.42, 0.04), red, 0.14, 1.16, 0.2);
+  addMesh(model, new THREE.CylinderGeometry(0.2, 0.26, 0.34, 8), hakama, 0, 0.78, 0);
+  const bib = addMesh(model, new THREE.SphereGeometry(0.07, 8, 6), cream, 0, 0.98, 0.18);
+  bib.scale.set(1.3, 0.7, 0.4);
 
-  const emblem = new THREE.Mesh(new THREE.CircleGeometry(0.11, 16), new THREE.MeshBasicMaterial({ map: emblemTex, color: 0xffe08a }));
-  emblem.position.set(0, 1.18, 0.22);
+  const goldDisc = new THREE.Mesh(new THREE.CircleGeometry(0.125, 20), new THREE.MeshBasicMaterial({ color: 0xe6b84a }));
+  goldDisc.position.set(0, 1.2, 0.21);
+  model.add(goldDisc);
+  const emblem = new THREE.Mesh(new THREE.CircleGeometry(0.09, 20), new THREE.MeshBasicMaterial({ map: emblemTex, color: 0xffffff }));
+  emblem.position.set(0, 1.2, 0.22);
   model.add(emblem);
   const ring = addMesh(model, new THREE.TorusGeometry(0.12, 0.018, 6, 16), gold, 0, 1.18, 0.2);
   ring.rotation.x = Math.PI / 2;
@@ -59,13 +64,14 @@ export function createHero(THREE, { std, addMesh, pivot, scene, blobMat, emblemT
   const earR = pivot(head, 0.1, 0.16, 0);
   for (const ear of [earL, earR]) {
     addMesh(ear, new THREE.ConeGeometry(0.07, 0.22, 6), black, 0, 0.1, 0);
-    addMesh(ear, new THREE.ConeGeometry(0.035, 0.12, 5), tan, 0, 0.08, 0.02);
+    addMesh(ear, new THREE.ConeGeometry(0.035, 0.12, 5), cream, 0, 0.08, 0.02);
   }
 
   const armL = pivot(model, -0.34, 1.28, 0);
   const armR = pivot(model, 0.34, 1.28, 0);
   for (const arm of [armL, armR]) {
-    addMesh(arm, new THREE.SphereGeometry(0.09, 8, 6), gold, 0, 0, 0);
+    addMesh(arm, new THREE.SphereGeometry(0.08, 8, 6), armor, 0, 0, 0);
+    addMesh(arm, new THREE.TorusGeometry(0.075, 0.012, 5, 8), gold, 0, 0, 0).rotation.x = Math.PI / 2;
     addMesh(arm, new THREE.CylinderGeometry(0.055, 0.05, 0.28, 8), armor, 0, -0.18, 0);
     addMesh(arm, new THREE.TorusGeometry(0.06, 0.015, 5, 8), red, 0, -0.18, 0).rotation.x = Math.PI / 2;
     addMesh(arm, new THREE.SphereGeometry(0.06, 8, 6), tan, 0, -0.34, 0.02);
