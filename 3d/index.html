@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+  <meta name="theme-color" content="#140c16" />
+  <meta name="description" content="COCORO 3D — a black-and-tan Shiba samurai fights hostile cats in a moonlit courtyard." />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="COCORO 3D" />
+  <title>COCORO 3D</title>
+  <link rel="manifest" href="./manifest.json" />
+  <link rel="icon" href="./icons/favicon.png" />
+  <link rel="apple-touch-icon" href="./icons/icon-180.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Outfit:wght@500;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="./style.css" />
+</head>
+<body>
+  <canvas id="c" tabindex="0" aria-label="COCORO 3D courtyard"></canvas>
+  <div id="vignette"></div>
+  <p id="boot" role="status">Loading the courtyard…</p>
+
+  <div id="hud" class="hidden">
+    <div class="hud-left">
+      <div class="bar hp"><span id="hpFill"></span><em id="hpText">140</em></div>
+      <div class="bar ki"><span id="kiFill"></span><em>KI</em></div>
+    </div>
+    <div class="hud-center">
+      <div id="areaName">MOON COURTYARD</div>
+      <div id="waveText">WAVE 1 / 5</div>
+      <div id="bossWrap" class="hidden">
+        <span id="bossName">MOMO</span>
+        <div class="bar boss"><span id="bossFill"></span></div>
+      </div>
+    </div>
+    <div class="hud-right">
+      <button id="btn-pause" type="button" aria-label="Pause">II</button>
+      <div id="scorePill">0</div>
+      <div id="comboPill">COMBO</div>
+    </div>
+  </div>
+
+  <div id="callout" aria-live="polite"></div>
+  <div id="hint" class="hidden"></div>
+  <div id="floats"></div>
+
+  <div id="touch" class="hidden">
+    <div id="stickZone" aria-label="Move">
+      <div id="stickBase"></div>
+      <div id="knob"></div>
+    </div>
+    <div id="buttons">
+      <button id="b-dodge" type="button" data-act="dodge">DODGE</button>
+      <button id="b-block" type="button" data-act="block">BLOCK</button>
+      <button id="b-jump" type="button" data-act="jump">JUMP</button>
+      <button id="b-ki" type="button" data-act="special">KI</button>
+      <button id="b-slash" type="button" data-act="attack">SLASH</button>
+    </div>
+  </div>
+
+  <section id="screen-menu" class="screen">
+    <div class="panel">
+      <div class="brand">
+        <img src="./icons/icon-192.png" width="74" height="74" alt="COCORO emblem" />
+        <div>
+          <p class="eyebrow">3D COURTYARD</p>
+          <h1>COCORO</h1>
+          <p class="sub">SAMURAI LEGEND</p>
+        </div>
+      </div>
+      <p class="tag">Black-and-tan Shiba samurai. Hostile cats. One moonlit courtyard.</p>
+      <p class="meta" id="menu-best"></p>
+      <div class="col">
+        <button id="btn-play" class="primary" type="button">PLAY</button>
+        <button id="btn-continue" class="ghost hidden" type="button">CONTINUE</button>
+        <button id="btn-mute" class="sound" type="button">SOUND ON</button>
+      </div>
+      <ul class="help">
+        <li>Move with WASD or the stick. Space or JUMP double-jumps.</li>
+        <li>J or SLASH chains jab, kick, katana, and a spinning slash.</li>
+        <li>K or BLOCK softens frontal hits. Tap it as the claw lands for COUNTER.</li>
+        <li>L or DODGE rolls through attacks. U or KI spends ki on Thunder Slash.</li>
+        <li>Cats scratch, pounce, and slam. The glowing ring marks the strike.</li>
+        <li>Drag to orbit the camera.</li>
+      </ul>
+      <a class="back" href="../">Classic 2D</a>
+    </div>
+  </section>
+
+  <section id="screen-pause" class="screen hidden">
+    <div class="panel">
+      <p class="eyebrow">PAUSED</p>
+      <h1>HOLD</h1>
+      <p class="tag">WASD · Space · J · K · L · U</p>
+      <div class="col">
+        <button id="btn-resume" class="primary" type="button">CONTINUE</button>
+        <button id="btn-retry" class="ghost" type="button">RETRY</button>
+        <button id="btn-quit" class="ghost" type="button">QUIT</button>
+        <button id="btn-mute-2" class="sound" type="button">SOUND ON</button>
+      </div>
+    </div>
+  </section>
+
+  <section id="screen-end" class="screen hidden">
+    <div class="panel">
+      <p class="eyebrow" id="end-kicker">MOON COURTYARD</p>
+      <h1 id="end-title">CLEAR</h1>
+      <p id="end-text"></p>
+      <p id="end-score"></p>
+      <div class="col">
+        <button id="btn-again" class="primary" type="button">PLAY AGAIN</button>
+        <button id="btn-end-menu" class="ghost" type="button">MENU</button>
+      </div>
+    </div>
+  </section>
+
+  <script type="module" src="./game.js"></script>
+</body>
+</html>

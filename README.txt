@@ -20,3 +20,7 @@ Then open http://127.0.0.1:47321
 
 GitHub Pages:
   https://30032021Timur.github.io/cocoro-samurai-legend/
+
+3D courtyard (same site, /3d/):
+  http://127.0.0.1:47321/3d/
+  https://30032021Timur.github.io/cocoro-samurai-legend/3d/
