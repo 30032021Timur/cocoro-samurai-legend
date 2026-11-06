@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+  <meta name="theme-color" content="#1a100e" />
+  <meta name="description" content="COCORO: SAMURAI LEGEND — Stage 1 prototype. Black-and-tan Shiba samurai versus yellow OTD demons in Sakura Village." />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="COCORO" />
+  <title>COCORO: SAMURAI LEGEND</title>
+  <link rel="manifest" href="./manifest.json" />
+  <link rel="icon" href="./icons/favicon.png" />
+  <link rel="apple-touch-icon" href="./icons/icon-180.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Outfit:wght@500;650;800&display=swap" rel="stylesheet" />
+  <script type="module" crossorigin src="./assets/index-qZT81GKJ.js"></script>
+  <link rel="stylesheet" crossorigin href="./assets/index-aIIx045X.css">
+</head>
+<body>
+  <div id="app">
+    <canvas id="c"></canvas>
+
+    <div id="hud" class="hidden">
+      <div class="hud-left">
+        <div class="bar hp"><span id="hpFill"></span><em id="hpText">100</em></div>
+        <div class="bar ki"><span id="kiFill"></span><em>KI</em></div>
+      </div>
+      <div class="hud-center">
+        <div id="areaName">LEVEL 1 · VILLAGE GATE</div>
+        <div id="bossWrap" class="hidden">
+          <div id="bossName">KIBA · OTD WARDEN</div>
+          <div class="bar boss"><span id="bossFill"></span></div>
+          <div id="phasePips"><i></i><i></i><i></i></div>
+        </div>
+      </div>
+      <div class="hud-right">
+        <button id="btn-pause-hud" type="button" aria-label="Pause">II</button>
+        <div id="scorePill">0</div>
+        <div id="comboPill">COMBO</div>
+        <div id="coinPill">0</div>
+      </div>
+    </div>
+
+    <div id="callout"><b></b><small></small></div>
+    <div id="hint" class="hidden"></div>
+    <div id="toasts"></div>
+
+    <div id="cine-word"></div>
+    <div id="finish" class="hidden">
+      <b>FINISH HIM!</b>
+      <p>PC: J · J · U &nbsp;&nbsp; Mobile: FATALITY ×3</p>
+      <div id="finish-pips"><span>J</span><span>J</span><span>U</span></div>
+    </div>
+
+    <div id="touch" class="hidden">
+      <div id="stickZone" aria-label="Move">
+        <div id="stickBase"></div>
+        <div id="knob"></div>
+      </div>
+      <div id="buttons">
+        <button id="b-dodge" type="button" data-act="dodge">DODGE</button>
+        <button id="b-block" type="button" data-act="block">BLOCK</button>
+        <button id="b-jump" type="button" data-act="jump">JUMP</button>
+        <button id="b-ki" type="button" data-act="special">KI</button>
+        <button id="b-slash" type="button" data-act="attack">SLASH</button>
+        <button id="b-fat" type="button" data-act="fatality" class="hidden">FATALITY</button>
+      </div>
+    </div>
+
+    <div id="screen-menu" class="screen">
+      <div class="panel">
+        <div class="brand">
+          <img src="./icons/icon-192.png" width="74" height="74" alt="COCORO emblem" />
+          <div>
+            <p class="eyebrow">Stage 1 prototype · Level 1 of 50</p>
+            <h1>COCORO</h1>
+            <p class="sub">SAMURAI LEGEND</p>
+          </div>
+        </div>
+        <p class="tag">Black-and-tan Shiba samurai. Yellow OTD demons. Sakura Village.</p>
+        <p class="meta" id="menu-meta"></p>
+        <div class="col">
+          <button id="btn-play" class="primary" type="button">PLAY</button>
+          <button id="btn-continue" type="button">CONTINUE</button>
+          <button id="btn-levels" type="button">LEVEL SELECT</button>
+          <button id="btn-upgrades" type="button">UPGRADES</button>
+          <button id="btn-achievements" type="button">ACHIEVEMENTS</button>
+          <button id="btn-board" type="button">LEADERBOARD</button>
+          <button id="btn-settings" type="button">SETTINGS</button>
+          <button id="btn-help" type="button">HOW TO PLAY</button>
+        </div>
+        <p class="fine">PC: WASD · Space jump · J attack · K block · L dodge · U thunder. This build is Level 1 only. Levels 2–50 are not implemented.</p>
+      </div>
+    </div>
+
+    <div id="screen-levels" class="screen dim hidden">
+      <div class="panel wide">
+        <h2>Level Select</h2>
+        <p class="tag">Only Level 1 — Sakura Village is playable. The other 49 levels are listed so the full brief stays visible. They are not built.</p>
+        <div id="level-grid"></div>
+        <button id="btn-levels-back" type="button">BACK</button>
+      </div>
+    </div>
+
+    <div id="screen-upgrades" class="screen dim hidden">
+      <div class="panel wide">
+        <h2>Upgrades</h2>
+        <p id="upgrade-wallet" class="tag"></p>
+        <div id="upgrade-list"></div>
+        <button id="btn-upgrades-back" type="button">BACK</button>
+      </div>
+    </div>
+
+    <div id="screen-achievements" class="screen dim hidden">
+      <div class="panel wide">
+        <h2>Achievements</h2>
+        <div id="ach-list"></div>
+        <button id="btn-ach-back" type="button">BACK</button>
+      </div>
+    </div>
+
+    <div id="screen-board" class="screen dim hidden">
+      <div class="panel">
+        <h2>Leaderboard</h2>
+        <p class="tag">Local to this browser. No online ranks in Stage 1.</p>
+        <div id="board-list"></div>
+        <button id="btn-board-back" type="button">BACK</button>
+      </div>
+    </div>
+
+    <div id="screen-settings" class="screen dim hidden">
+      <div class="panel">
+        <h2>Settings</h2>
+        <label>Music <input id="set-music" type="range" min="0" max="1" step="0.05" /></label>
+        <label>SFX <input id="set-sfx" type="range" min="0" max="1" step="0.05" /></label>
+        <label class="check"><input id="set-voice" type="checkbox" /> English voice labels</label>
+        <label class="check"><input id="set-shake" type="checkbox" /> Screen shake</label>
+        <label>Touch controls
+          <select id="set-touch">
+            <option value="auto">Auto</option>
+            <option value="on">Always on</option>
+            <option value="off">Off</option>
+          </select>
+        </label>
+        <div class="col">
+          <button id="btn-how" type="button">HOW TO PLAY</button>
+          <button id="btn-reset" class="danger" type="button">RESET SAVE</button>
+          <button id="btn-settings-back" class="primary" type="button">BACK</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="screen-tutorial" class="screen dim hidden">
+      <div class="panel wide">
+        <h2>How to fight</h2>
+        <ul class="help">
+          <li><b>Move</b> WASD or the stick. <b>Jump</b> Space or JUMP. A second press is a double jump.</li>
+          <li><b>J / SLASH</b> chains jab, kick, katana, spinning slash. <b>SHUH!</b> marks the blade.</li>
+          <li><b>K / BLOCK</b> chip-damages frontal hits. Tap block as the strike lands for <b>COUNTER!</b></li>
+          <li><b>L / DODGE</b> rolls through attacks. <b>U / KI</b> spends ki on Thunder Strike.</li>
+          <li><b>OTD grunts</b> walk in and claw. <b>Ninjas</b> dash and throw stars. <b>Blades</b> use a katana and can guard.</li>
+          <li>Clear three areas, then <b>Kiba, OTD Warden</b>. Three phases. At zero health: <b>FINISH HIM!</b> then J, J, U (or FATALITY three times).</li>
+          <li>The finisher is a blue-flame sword cinematic. No gore. Armor breaks, the demon becomes dark energy.</li>
+        </ul>
+        <label class="check"><input id="help-remember" type="checkbox" checked /> Don't show this again before Play</label>
+        <div class="row">
+          <button id="btn-help-back" type="button">BACK</button>
+          <button id="btn-fight" class="primary" type="button">FIGHT</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="screen-pause" class="screen dim hidden">
+      <div class="panel">
+        <h2>Paused</h2>
+        <p class="tag">WASD · Space · J · K · L · U</p>
+        <div class="col">
+          <button id="btn-resume" class="primary" type="button">RESUME</button>
+          <button id="btn-pause-settings" type="button">SETTINGS</button>
+          <button id="btn-quit" type="button">SAVE &amp; QUIT</button>
+        </div>
+        <p class="fine">Quit saves this area. Continue restarts the area with your saved health. Enemies respawn.</p>
+      </div>
+    </div>
+
+    <div id="screen-victory" class="screen dim hidden">
+      <div class="panel">
+        <p class="eyebrow">Level 1 cleared</p>
+        <h2>COCORO WINS</h2>
+        <div id="vic-rank" class="rank">S</div>
+        <p id="vic-score" class="score">0</p>
+        <p id="vic-detail" class="tag"></p>
+        <p class="fine">Stage 1 ends here. Levels 2–50, the other nine worlds, and the rest of the fatality list are not in this build.</p>
+        <div class="row">
+          <button id="btn-vic-menu" type="button">MENU</button>
+          <button id="btn-vic-again" class="primary" type="button">PLAY AGAIN</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="screen-dead" class="screen dim hidden">
+      <div class="panel">
+        <h2>Defeated</h2>
+        <p id="dead-detail" class="tag"></p>
+        <div class="row">
+          <button id="btn-dead-menu" type="button">MENU</button>
+          <button id="btn-retry" class="primary" type="button">RETRY AREA</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="installBanner">
+      <span>Add COCORO to your home screen</span>
+      <button id="btn-install" type="button">Install</button>
+      <button id="btn-install-dismiss" type="button" aria-label="Dismiss">✕</button>
+    </div>
+    <pre id="fatal" hidden></pre>
+  </div>
+</body>
+</html>
