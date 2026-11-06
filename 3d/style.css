@@ -429,9 +429,8 @@ h1 {
   font-size: 15px;
 }
 
-#b-jump { right: 8px; bottom: 188px; background: linear-gradient(180deg, #b8fff0, #3ec8c0); color: #10302c; }
-#b-block { right: 8px; bottom: 96px; width: 84px; height: 84px; }
-#b-ki { right: 8px; bottom: 280px; width: 84px; height: 84px; }
+#b-jump { right: 8px; bottom: 132px; background: linear-gradient(180deg, #b8fff0, #3ec8c0); color: #10302c; }
+#b-ki { right: 8px; bottom: 240px; }
 #b-fat { right: 0; bottom: 8px; width: 112px; height: 112px; display: none; background: linear-gradient(180deg, #ffb067, #e85a28); color: #2a100c; font-size: 13px; }
 body.finishing #b-fat { display: block; }
 body.finishing #b-slash { display: none; }
