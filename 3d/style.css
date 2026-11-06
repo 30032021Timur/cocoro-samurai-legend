@@ -342,15 +342,6 @@ h1 {
 
 .ghost.hidden, #btn-continue.hidden { display: none; }
 
-.back {
-  display: inline-block;
-  margin-top: 12px;
-  color: var(--cyan);
-  font-weight: 800;
-  letter-spacing: 0.08em;
-  font-size: 13px;
-}
-
 #touch {
   position: fixed;
   inset: 0;
