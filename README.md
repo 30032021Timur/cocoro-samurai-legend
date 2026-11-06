@@ -3,3 +3,5 @@
 Stage 1 static build (Level 1 — Sakura Village).
 
 Play: https://30032021Timur.github.io/cocoro-samurai-legend/
+
+GitHub Pages source: branch `main`, folder `/` (root).
