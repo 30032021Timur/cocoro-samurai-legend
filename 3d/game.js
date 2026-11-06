@@ -1,19 +1,13 @@
 import * as THREE from './vendor/three.module.js';
+import { WORLDS, UPGRADES, BOSSES, LEVELS } from './campaign.js';
 
 const ARENA_R = 11.15;
-const SAVE_KEY = 'cocoro-3d-v1';
+const SAVE_KEY = 'cocoro-3d-v2';
 const ATTACKS = [
   { dur: 0.28, active: [0.06, 0.16], range: 1.9, radius: 0.72, dmg: 14, knock: 1.8, lunge: 3.4, launch: 0.2 },
   { dur: 0.32, active: [0.08, 0.18], range: 2.0, radius: 0.78, dmg: 16, knock: 2.6, lunge: 4.4, launch: 1.2, kick: true },
   { dur: 0.4, active: [0.12, 0.26], range: 2.35, radius: 0.9, dmg: 20, knock: 4.2, lunge: 5.2, launch: 2.2, shuh: true },
   { dur: 0.5, active: [0.1, 0.36], range: 2.65, radius: 1.35, dmg: 26, knock: 7.2, lunge: 2.2, launch: 4.2, aoe: true, shuh: true },
-];
-const WAVES = [
-  ['alley', 'alley', 'alley'],
-  ['alley', 'pounce', 'alley', 'pounce'],
-  ['brute', 'alley', 'alley'],
-  ['pounce', 'brute', 'pounce', 'alley'],
-  ['boss'],
 ];
 const SLOTS = [
   { x: -1.2, z: -8.1 },
@@ -25,6 +19,7 @@ const SLOTS = [
 const KINDS = {
   alley: { hp: 40, speed: 3.2, damage: 8, range: 1.5, windup: 0.4, recover: 0.32, cool: 0.85, scale: 1, hurt: 0.32, leap: false, body: 0xe8883a, dark: 0xc45c22, belly: 0xf2d2b0, ear: 0xf2c2a4, eye: 0xffe38a },
   pounce: { hp: 30, speed: 5.05, damage: 11, range: 1.75, windup: 0.28, recover: 0.34, cool: 1.0, scale: 0.92, hurt: 0.24, leap: true, body: 0x2b2932, dark: 0x14141a, belly: 0x3a3844, ear: 0xf0b8c8, eye: 0xd2b0ff },
+  blade: { hp: 56, speed: 3.35, damage: 11, range: 1.68, windup: 0.36, recover: 0.3, cool: 0.8, scale: 1.05, hurt: 0.22, leap: false, guard: true, body: 0xc9a36a, dark: 0x3a2a1c, belly: 0xf3ddc0, ear: 0xe7c7a4, eye: 0xffe08a },
   brute: { hp: 108, speed: 2.15, damage: 15, range: 1.9, windup: 0.55, recover: 0.46, cool: 1.15, scale: 1.4, hurt: 0.18, leap: false, body: 0xf4efe4, dark: 0x2a241c, belly: 0xfff8ee, ear: 0xf0b090, eye: 0xffe08a },
   boss: { hp: 360, speed: 2.6, damage: 16, range: 2.2, windup: 0.46, recover: 0.38, cool: 0.8, scale: 2.08, hurt: 0.1, leap: false, body: 0xf7f4ee, dark: 0x171717, belly: 0xfffaf4, ear: 0x171717, eye: 0xffd0a8 },
 };
@@ -69,9 +64,15 @@ const touchOn = window.matchMedia('(pointer: coarse)').matches || navigator.maxT
 const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 if (touchOn) document.body.classList.add('touch');
 
-const save = loadSave();
-let muted = !!save.muted;
-let best = save.best || 0;
+const progress = freshProgress(loadSave());
+let muted = !!progress.muted;
+let levelId = 1;
+let roomIndex = -1;
+let fatality = null;
+let runCoins = 0;
+let queuedLevel = 0;
+const stage = { cherries: [], mountains: [], lights: [], houses: [], glows: [] };
+let rimLight = null;
 let mode = 'menu';
 let started = false;
 let cleared = false;
@@ -132,9 +133,30 @@ function loadSave() {
   try { return JSON.parse(localStorage.getItem(SAVE_KEY)) || {}; } catch { return {}; }
 }
 
-function writeSave() {
-  try { localStorage.setItem(SAVE_KEY, JSON.stringify({ best, muted })); } catch { /* ignore */ }
+function freshProgress(raw) {
+  const ranks = { hp: 0, atk: 0, spd: 0, def: 0, ki: 0, ...(raw.upgrades || {}) };
+  return {
+    unlocked: clamp(raw.unlocked || 1, 1, 50),
+    complete: !!raw.complete,
+    coins: raw.coins || 0,
+    muted: !!raw.muted,
+    upgrades: ranks,
+    bests: raw.bests || {},
+  };
 }
+
+function writeSave() {
+  progress.muted = muted;
+  try { localStorage.setItem(SAVE_KEY, JSON.stringify(progress)); } catch { /* ignore */ }
+}
+
+function currentLevel() { return LEVELS[levelId - 1]; }
+function statMaxHp() { return 140 + progress.upgrades.hp * 12; }
+function statMaxKi() { return 100 + progress.upgrades.ki * 10; }
+function statAtk() { return 1 + progress.upgrades.atk * 0.08; }
+function statSpd() { return 1 + progress.upgrades.spd * 0.06; }
+function statDef() { return progress.upgrades.def * 0.06; }
+function threat() { return 1 + (levelId - 1) * 0.055; }
 
 function clamp(v, a, b) { return Math.max(a, Math.min(b, v)); }
 
@@ -425,8 +447,7 @@ let heroSword = null;
 let emblemTex;
 let blobMat;
 
-function buildCat(kind) {
-  const stats = KINDS[kind];
+function buildCat(kind, stats = KINDS[kind]) {
   const group = new THREE.Group();
   const bodyMat = std(stats.body, 0.78, 0.03);
   const darkMat = std(stats.dark, 0.8, 0.03);
@@ -440,6 +461,10 @@ function buildCat(kind) {
       const stripe = addMesh(group, new THREE.BoxGeometry(0.08, 0.05, 0.22), darkMat, 0, 0.78, -0.18 + i * 0.18);
       stripe.rotation.z = 0.15 * (i - 1);
     }
+  } else if (kind === 'blade') {
+    const sword = addMesh(group, new THREE.BoxGeometry(0.04, 0.42, 0.02), std(COL.blade, 0.25, 0.7), 0.28, 0.42, 0.2);
+    sword.rotation.z = -0.4;
+    addMesh(group, new THREE.BoxGeometry(0.12, 0.03, 0.04), std(COL.gold, 0.35, 0.6), 0.22, 0.34, 0.18);
   } else if (kind === 'brute') {
     addMesh(group, new THREE.SphereGeometry(0.16, 10, 8), std(0xe07a32, 0.8, 0), 0.16, 0.58, 0.1);
     addMesh(group, new THREE.SphereGeometry(0.14, 10, 8), darkMat, -0.18, 0.62, -0.05);
@@ -504,18 +529,42 @@ function buildCat(kind) {
   return { group, body, head, tail, legs, ring, hpGroup, hpFill: fill, mats: [bodyMat, darkMat, bellyMat] };
 }
 
-function spawnCat(kind, slot) {
-  const stats = KINDS[kind];
-  const built = buildCat(kind);
-  const base = kind === 'boss' ? { x: 0, z: -7.3 } : SLOTS[slot % SLOTS.length];
+function spawnCat(kind, slot, profile) {
+  const baseKind = profile ? 'boss' : kind;
+  const stats = { ...KINDS[baseKind] };
+  if (profile) {
+    stats.hp = profile.hp;
+    stats.damage = profile.dmg;
+    stats.speed = profile.speed;
+    stats.scale = profile.scale;
+    stats.body = profile.body;
+    stats.dark = profile.dark;
+    stats.belly = profile.belly;
+    stats.ear = profile.ear;
+    stats.eye = profile.eye;
+    stats.hurt = 0.12;
+    stats.range = 2.2;
+  } else {
+    const grow = threat();
+    stats.hp = Math.round(stats.hp * grow);
+    stats.damage = Math.max(1, Math.round(stats.damage * (1 + (levelId - 1) * 0.03)));
+  }
+  const built = buildCat(baseKind, stats);
+  const base = profile ? { x: 0, z: -7.3 } : SLOTS[slot % SLOTS.length];
   const cat = {
     id: catSeq++,
-    kind,
+    kind: baseKind,
     stats,
-    boss: kind === 'boss',
+    boss: !!profile,
+    bossName: profile ? profile.name : '',
+    bossTitle: profile ? profile.title : '',
+    finisher: profile ? profile.fatality : null,
+    finishing: false,
+    fatalDone: false,
+    phaseMark: 0,
     ...built,
-    x: base.x + (kind === 'boss' ? 0 : (Math.random() - 0.5) * 0.35),
-    z: base.z + (kind === 'boss' ? 0 : (Math.random() - 0.5) * 0.35),
+    x: base.x + (profile ? 0 : (Math.random() - 0.5) * 0.35),
+    z: base.z + (profile ? 0 : (Math.random() - 0.5) * 0.35),
     yaw: 0,
     vx: 0,
     vz: 0,
@@ -545,7 +594,7 @@ function spawnCat(kind, slot) {
   };
   cat.yaw = Math.atan2(player.x - cat.x, player.z - cat.z);
   cats.push(cat);
-  if (kind !== 'pounce') sfx('meow');
+  if (baseKind !== 'pounce') sfx('meow');
   return cat;
 }
 
@@ -617,23 +666,29 @@ function killCat(cat) {
   cat.deadT = 0;
   cat.hp = 0;
   cat.ring.visible = false;
-  score += cat.boss ? 1000 : 80;
+  score += cat.boss ? 400 : 40;
   score += combo * 4;
-  burst(cat.x, 0.6, cat.z, cat.boss ? 0xf0c14a : 0xffb7c8, cat.boss ? 18 : 8, cat.boss ? 5 : 3);
+  runCoins += cat.boss ? 20 : 5;
+  burst(cat.x, 0.6, cat.z, cat.boss ? 0xf0c14a : 0xffb7c8, cat.boss ? 16 : 8, cat.boss ? 5 : 3);
   sfx('meow');
-  if (cat.boss) callout('MOMO FALLS');
-  if (Math.random() < (cat.boss ? 1 : 0.38)) spawnPickup(cat.x, cat.z, Math.random() < 0.6 ? 'heal' : 'ki');
+  if (cat.boss && !cat.fatalDone) callout(`${cat.bossName} FALLS`);
+  if (Math.random() < (cat.boss ? 1 : 0.28)) spawnPickup(cat.x, cat.z, Math.random() < 0.6 ? 'heal' : 'ki');
 }
 
 function hitCat(cat, dmg, knock, launch) {
-  if (cat.dead || mode !== 'play' || ending) return;
+  if (cat.dead || cat.finishing || mode !== 'play' || ending) return;
+  dmg = Math.max(1, Math.round(dmg * statAtk()));
+  if (cat.stats.guard && !cat.boss && cat.state === 'chase' && Math.random() < 0.22) {
+    dmg = Math.max(1, Math.round(dmg * 0.4));
+    floatText(cat.x, 1.35 * cat.stats.scale, cat.z, 'GUARD', '');
+  }
   const armored = cat.boss && cat.state === 'attack';
   cat.hp -= dmg;
   cat.flash = 0.1;
   combo += 1;
   comboTimer = 1.65;
   score += Math.round(dmg * (1 + Math.min(combo, 12) * 0.12));
-  player.ki = Math.min(100, player.ki + 5);
+  player.ki = Math.min(statMaxKi(), player.ki + 5);
   floatText(cat.x, 1.15 * cat.stats.scale, cat.z, String(Math.round(dmg)), combo > 2 ? 'crit' : '');
   sfx('hit');
   shake = Math.max(shake, cat.boss ? 0.12 : 0.2);
@@ -648,11 +703,28 @@ function hitCat(cat, dmg, knock, launch) {
     cat.state = 'hurt';
     hitStop = Math.max(hitStop, dmg > 20 ? 0.05 : 0.03);
   }
-  if (cat.hp <= 0) killCat(cat);
+  if (cat.hp <= 0) {
+    if (cat.boss && cat.finisher) {
+      cat.hp = 1;
+      cat.finishing = true;
+      cat.state = 'finish';
+      cat.hurtT = 0;
+      cat.vx = 0;
+      cat.vz = 0;
+      fatality = { cat, step: 0, style: cat.finisher };
+      document.body.classList.add('finishing');
+      const banner = document.getElementById('finish');
+      banner.classList.add('show');
+      banner.querySelectorAll('span').forEach((pip) => pip.classList.remove('on'));
+      return;
+    }
+    killCat(cat);
+  }
 }
 
 function hurtPlayer(amount, attacker, heavy) {
-  if (player.iframe > 0 || player.dead || mode !== 'play' || ending) return;
+  if (player.iframe > 0 || player.dead || mode !== 'play' || ending || fatality) return;
+  amount = Math.max(1, Math.round(amount * (1 - statDef())));
   const fromX = attacker ? attacker.x : player.x;
   const fromZ = attacker ? attacker.z : player.z + 1;
   const toX = fromX - player.x;
@@ -668,7 +740,7 @@ function hurtPlayer(amount, attacker, heavy) {
     const perfect = player.blockT < 0.14;
     if (perfect) {
       dealt = 0;
-      player.ki = Math.min(100, player.ki + 16);
+      player.ki = Math.min(statMaxKi(), player.ki + 16);
       player.iframe = 0.22;
       callout('COUNTER!');
       sfx('counter');
@@ -682,7 +754,7 @@ function hurtPlayer(amount, attacker, heavy) {
       }
     } else {
       dealt = Math.max(1, Math.round(amount * (heavy ? 0.35 : 0.2)));
-      player.ki = Math.min(100, player.ki + 5);
+      player.ki = Math.min(statMaxKi(), player.ki + 5);
       player.iframe = 0.12;
       sfx('block');
     }
@@ -755,7 +827,35 @@ function startAttack(index) {
   player.vz += face.z * data.lunge;
 }
 
+function advanceFatality(kind) {
+  if (!fatality) return;
+  const need = ['attack', 'attack', 'special'][fatality.step];
+  if (kind !== need && kind !== 'fatality') return;
+  fatality.step += 1;
+  document.querySelectorAll('#finish span').forEach((pip, index) => pip.classList.toggle('on', index < fatality.step));
+  sfx(kind === 'special' || fatality.step === 3 ? 'thunder' : 'slash');
+  if (fatality.step >= 3) resolveFatality();
+}
+
+function resolveFatality() {
+  const cat = fatality.cat;
+  const style = fatality.style;
+  fatality = null;
+  document.body.classList.remove('finishing');
+  document.getElementById('finish').classList.remove('show');
+  cat.fatalDone = true;
+  cat.finishing = false;
+  burst(cat.x, 1.1, cat.z, style === 'blue' ? 0x9fd8ff : 0xffe7a0, 20, 6);
+  callout('FATALITY');
+  killCat(cat);
+}
+
 function tryAttack() {
+  if (fatality) {
+    advanceFatality('attack');
+    if (!player.atk && !player.dead) startAttack(Math.min(2, fatality ? 0 : 0));
+    return true;
+  }
   if (mode !== 'play' || player.dead || ending) return false;
   if (player.dodgeT > 0) return false;
   if (player.blockHeld && player.grounded && !player.atk) return false;
@@ -857,6 +957,10 @@ function thunderStrike() {
 }
 
 function trySpecial() {
+  if (fatality) {
+    advanceFatality('special');
+    return true;
+  }
   if (mode !== 'play' || player.dead || ending) return false;
   if (player.specialCd > 0) return false;
   if (player.ki < 40) {
@@ -985,6 +1089,13 @@ function updateCat(cat, dt) {
   }
   if (mode !== 'play' || ending) return;
 
+  if (cat.finishing) {
+    cat.vx = 0;
+    cat.vz = 0;
+    cat.hop = 0;
+    return;
+  }
+
   if (cat.flash > 0) {
     cat.flash -= dt;
     const on = cat.flash > 0;
@@ -1005,10 +1116,13 @@ function updateCat(cat, dt) {
     return;
   }
 
-  if (cat.boss && !cat.called && cat.hp <= cat.maxHp * 0.55) {
-    cat.called = true;
-    spawnQueue.push({ kind: 'alley', t: 0.15, slot: 2 }, { kind: 'pounce', t: 0.4, slot: 3 });
-    callout('MORE CATS');
+  if (cat.boss && !cat.finishing && cat.phaseMark < 2 && cat.hp > 1) {
+    const gate = cat.phaseMark === 0 ? 0.66 : 0.33;
+    if (cat.hp <= cat.maxHp * gate) {
+      cat.phaseMark += 1;
+      spawnQueue.push({ kind: 'blade', t: 0.15, slot: 1 }, { kind: 'pounce', t: 0.4, slot: 3 });
+      callout(cat.phaseMark === 1 ? 'PHASE 2' : 'PHASE 3');
+    }
   }
 
   const dx = player.x - cat.x;
@@ -1177,7 +1291,7 @@ function updatePlayer(dt) {
     if (wishLen > 0.15 && !player.atk) player.yaw = dampAngle(player.yaw, Math.atan2(wishX, wishZ), player.grounded ? 14 : 8, dt);
     const response = player.grounded ? (player.atk ? 4 : 14) : 3.2;
     const k = 1 - Math.exp(-response * dt);
-    const maxS = player.blockHeld && player.grounded ? 2.7 : 6.55;
+    const maxS = (player.blockHeld && player.grounded ? 2.7 : 6.55) * statSpd();
     player.vx += (wishX * maxS - player.vx) * k;
     player.vz += (wishZ * maxS - player.vz) * k;
   } else {
@@ -1249,7 +1363,7 @@ function updatePlayer(dt) {
   }
 
   player.speed = Math.hypot(player.vx, player.vz);
-  if (!player.dead && !ending) player.ki = Math.min(100, player.ki + dt * 3.4);
+  if (!player.dead && !ending) player.ki = Math.min(statMaxKi(), player.ki + dt * 3.4);
   if (combo > 0) {
     comboTimer -= dt;
     if (comboTimer <= 0) combo = 0;
@@ -1273,7 +1387,7 @@ function updatePickups(dt) {
         player.hp = Math.min(player.maxHp, player.hp + 24);
         floatText(pickup.x, 1.2, pickup.z, '+24', 'heal');
       } else {
-        player.ki = Math.min(100, player.ki + 25);
+        player.ki = Math.min(statMaxKi(), player.ki + 25);
         floatText(pickup.x, 1.2, pickup.z, 'KI', 'heal');
       }
       sfx('heal');
@@ -1294,57 +1408,74 @@ function updateSpawns(dt) {
   for (const item of spawnQueue) item.t -= dt;
   const ready = spawnQueue.filter((item) => item.t <= 0);
   spawnQueue = spawnQueue.filter((item) => item.t > 0);
-  for (const item of ready) spawnCat(item.kind, item.slot);
+  for (const item of ready) spawnCat(item.kind, item.slot, item.profile || null);
 }
 
-function updateWaves(dt) {
+function updateRooms(dt) {
   updateSpawns(dt);
-  if (ending || waveIndex < 0) return;
+  if (ending || roomIndex < 0 || fatality) return;
   const living = cats.some((cat) => !cat.dead);
   if (!living && spawnQueue.length === 0) {
-    if (waveIndex >= WAVES.length - 1) {
+    const level = currentLevel();
+    if (roomIndex >= level.rooms.length - 1) {
       between += dt;
-      if (between > 0.55) win();
+      if (between > 0.4) clearLevel();
       return;
     }
     if (!announcedClear) {
       announcedClear = true;
-      callout('WAVE CLEAR');
-      score += 220;
-      sfx('start');
+      callout('ROOM CLEAR');
+      score += 60;
     }
     between += dt;
-    if (between > 1.15) beginWave();
+    if (between > 0.85) beginRoom();
   } else between = 0;
 }
 
-function beginWave() {
-  waveIndex += 1;
+function beginRoom() {
+  roomIndex += 1;
   between = 0;
   announcedClear = false;
-  if (waveIndex >= WAVES.length) {
-    win();
+  const level = currentLevel();
+  if (roomIndex >= level.rooms.length) {
+    clearLevel();
     return;
   }
-  const list = WAVES[waveIndex];
-  callout(list[0] === 'boss' ? 'BOSS · MOMO' : `WAVE ${waveIndex + 1} / ${WAVES.length}`);
-  spawnQueue = list.map((kind, i) => ({ kind, t: 0.35 + i * 0.32, slot: i }));
-  if (waveIndex === 0) {
+  const room = level.rooms[roomIndex];
+  applyTheme(level.world);
+  if (room.boss) {
+    const profile = BOSSES[room.boss];
+    callout(`${profile.name} · ${profile.title}`);
+    spawnQueue = [{ kind: 'boss', t: 0.4, slot: 0, profile }];
+  } else {
+    callout(room.name);
+    spawnQueue = room.foes.map((kind, index) => ({ kind, t: 0.25 + index * 0.24, slot: index }));
+  }
+  if (room.heal) spawnPickup(0.8, -1.4, 'heal');
+  if (level.id === 1 && roomIndex === 0) {
     showHint(touchOn
-      ? 'Stick to move. SLASH chains hits. BLOCK, DODGE, JUMP, and KI.'
-      : 'WASD move · Space jump · J slash · K block · L dodge · U thunder');
+      ? 'Stick to move. SLASH chains hits. BLOCK, DODGE, JUMP, and KI. Bosses end with FATALITY.'
+      : 'WASD move · Space jump · J slash · K block · L dodge · U thunder. Bosses: J J U.');
   }
 }
 
-function win() {
+function clearLevel() {
   if (ending) return;
+  const level = currentLevel();
+  progress.coins += level.clearBonus + runCoins;
+  runCoins = 0;
+  if (level.id >= progress.unlocked && level.id < 50) progress.unlocked = level.id + 1;
+  if (level.id === 50) progress.complete = true;
+  progress.bests[level.id] = Math.max(progress.bests[level.id] || 0, score);
+  writeSave();
   ending = 'win';
   cleared = true;
-  endDelay = 1.15;
-  score += 500;
-  callout('COURTYARD CLEAR');
+  endDelay = 0.95;
+  score += 150;
+  queuedLevel = level.id < 50 ? level.id + 1 : level.id;
+  callout(level.id === 50 ? 'LEGEND CLEAR' : 'LEVEL CLEAR');
   sfx('win');
-  burst(player.x, 1.2, player.z, 0xf3b7c8, 16, 4);
+  burst(player.x, 1.2, player.z, 0xf3b7c8, 14, 4);
 }
 
 function updateBuffers(dt) {
@@ -1559,15 +1690,23 @@ function updateHud(dt) {
   const hpRatio = clamp(player.hp / player.maxHp, 0, 1);
   hpFill.style.transform = `scaleX(${hpRatio})`;
   hpText.textContent = String(Math.ceil(player.hp));
-  kiFill.style.transform = `scaleX(${clamp(player.ki / 100, 0, 1)})`;
+  kiFill.style.transform = `scaleX(${clamp(player.ki / statMaxKi(), 0, 1)})`;
   scorePill.textContent = String(score);
+  const coinPill = document.getElementById('coinPill');
+  if (coinPill) coinPill.textContent = String(progress.coins + runCoins);
   comboPill.textContent = combo > 1 ? `${combo} HIT` : '';
   comboPill.classList.toggle('on', combo > 1);
   document.body.classList.toggle('low', mode === 'play' && player.hp > 0 && player.hp <= 40);
-  waveText.textContent = waveIndex >= 0 ? `WAVE ${Math.min(waveIndex + 1, WAVES.length)} / ${WAVES.length}` : 'WAVE 1 / 5';
+  const level = currentLevel();
+  const room = level && roomIndex >= 0 ? level.rooms[roomIndex] : null;
+  document.getElementById('areaName').textContent = level ? `${level.id} · ${level.name}` : 'SAKURA VILLAGE';
+  waveText.textContent = room ? `${room.name} · ${roomIndex + 1}/${level.rooms.length}` : '';
   const boss = cats.find((cat) => cat.boss && !cat.dead);
   bossWrap.classList.toggle('hidden', !boss);
-  if (boss) bossFill.style.transform = `scaleX(${clamp(boss.hp / boss.maxHp, 0, 1)})`;
+  if (boss) {
+    document.getElementById('bossName').textContent = `${boss.bossName} · ${boss.bossTitle}`;
+    bossFill.style.transform = `scaleX(${clamp(boss.hp / boss.maxHp, 0, 1)})`;
+  }
   bDodge.classList.toggle('cd', player.dodgeCd > 0);
   bKi.classList.toggle('ready', player.ki >= 40 && player.specialCd <= 0);
   bKi.classList.toggle('cd', player.specialCd > 0 || player.ki < 40);
@@ -1584,7 +1723,11 @@ function updateHud(dt) {
 }
 
 function refreshMenu() {
-  bestEl.textContent = best > 0 ? `Best ${best}` : 'Clear the courtyard';
+  const frontier = LEVELS[progress.unlocked - 1];
+  document.getElementById('btn-play').textContent = progress.complete ? 'REPLAY FINAL' : `PLAY · ${frontier.name}`;
+  bestEl.textContent = progress.complete
+    ? `All 50 clear · ${progress.coins} coins`
+    : `Level ${progress.unlocked} / 50 · ${frontier.worldName} · ${progress.coins} coins`;
   continueBtn.classList.toggle('hidden', !(started && !cleared && !player.dead && mode === 'menu'));
 }
 
@@ -1592,6 +1735,8 @@ function hideScreens() {
   menuEl.classList.add('hidden');
   pauseEl.classList.add('hidden');
   endEl.classList.add('hidden');
+  document.getElementById('screen-levels').classList.add('hidden');
+  document.getElementById('screen-upgrades').classList.add('hidden');
 }
 
 function openMenu() {
@@ -1599,41 +1744,61 @@ function openMenu() {
   hud.classList.add('hidden');
   touchEl.classList.add('hidden');
   hintEl.classList.add('hidden');
+  queuedLevel = 0;
   hideScreens();
   menuEl.classList.remove('hidden');
   for (const item of decor) item.group.visible = true;
+  for (const cat of cats) cat.group.visible = false;
+  applyTheme(1);
   refreshMenu();
   cam.userUntil = 0;
 }
 
-function rememberScore() {
-  if (score > best) {
-    best = score;
-    writeSave();
-  }
-}
-
 function showEnd(kind) {
-  rememberScore();
+  const level = currentLevel();
   mode = kind;
   started = false;
+  fatality = null;
+  document.body.classList.remove('finishing');
+  document.getElementById('finish').classList.remove('show');
   hideScreens();
   endEl.classList.remove('hidden');
   hud.classList.add('hidden');
-  document.getElementById('end-title').textContent = kind === 'win' ? 'CLEAR' : 'DEFEATED';
+  document.getElementById('end-kicker').textContent = level ? level.worldName : 'COCORO';
+  document.getElementById('end-title').textContent = kind === 'win' ? (level && level.id === 50 ? 'LEGEND' : 'CLEAR') : 'DEFEATED';
   document.getElementById('end-text').textContent = kind === 'win'
-    ? 'The cats scatter into the petals.'
-    : 'The courtyard still belongs to the cats.';
-  document.getElementById('end-score').textContent = `Score ${score} · Best ${best}`;
+    ? `${level.name} is clear.`
+    : `${level.name} still belongs to the cats.`;
+  document.getElementById('end-score').textContent = `Score ${score} · Coins ${progress.coins}`;
+  const again = document.getElementById('btn-again');
+  if (kind === 'win' && level.id < 50) {
+    again.textContent = 'NEXT LEVEL';
+    queuedLevel = level.id + 1;
+  } else if (kind === 'win') {
+    again.textContent = 'REPLAY';
+    queuedLevel = 50;
+  } else {
+    again.textContent = 'RETRY';
+    queuedLevel = level.id;
+  }
 }
 
-function startRun() {
+function startRun(id) {
+  const pick = Math.max(1, Math.min(50, id || queuedLevel || progress.unlocked || 1));
+  if (pick > progress.unlocked) return;
+  queuedLevel = 0;
+  levelId = pick;
+  roomIndex = -1;
+  fatality = null;
+  runCoins = 0;
+  document.body.classList.remove('finishing');
+  const finish = document.getElementById('finish');
+  if (finish) finish.classList.remove('show');
   clearCombat();
   ending = null;
   endDelay = 0;
   announcedClear = false;
   between = 0;
-  waveIndex = -1;
   score = 0;
   combo = 0;
   comboTimer = 0;
@@ -1644,8 +1809,9 @@ function startRun() {
   player.vy = 0;
   player.vz = 0;
   player.yaw = Math.PI;
+  player.maxHp = statMaxHp();
   player.hp = player.maxHp;
-  player.ki = 45;
+  player.ki = Math.round(statMaxKi() * 0.5);
   player.dead = false;
   player.atk = null;
   player.queue = false;
@@ -1668,11 +1834,12 @@ function startRun() {
   hero.root.rotation.z = 0;
   hero.spin.rotation.set(0, 0, 0);
   for (const item of decor) item.group.visible = false;
+  applyTheme(currentLevel().world);
   snapCamera();
   mode = 'play';
   hideScreens();
   hud.classList.remove('hidden');
-  beginWave();
+  beginRoom();
   canvas.focus();
   ensureAudio();
   sfx('start');
@@ -1688,6 +1855,9 @@ function resume() {
   if (mode !== 'pause') return;
   mode = 'play';
   pauseEl.classList.add('hidden');
+  for (const item of decor) item.group.visible = false;
+  for (const cat of cats) if (!cat.dead) cat.group.visible = true;
+  applyTheme(currentLevel().world);
   canvas.focus();
 }
 
@@ -1844,23 +2014,147 @@ function bindInput() {
   stickZone.addEventListener('pointerup', endStick);
   stickZone.addEventListener('pointercancel', endStick);
 
-  document.getElementById('btn-play').addEventListener('click', () => { ensureAudio(); startRun(); });
+  document.getElementById('btn-play').addEventListener('click', () => {
+    ensureAudio();
+    startRun(progress.complete ? 50 : progress.unlocked);
+  });
+  document.getElementById('btn-levels').addEventListener('click', () => {
+    renderLevels();
+    hideScreens();
+    document.getElementById('screen-levels').classList.remove('hidden');
+  });
+  document.getElementById('btn-upgrades').addEventListener('click', () => {
+    renderUpgrades();
+    hideScreens();
+    document.getElementById('screen-upgrades').classList.remove('hidden');
+  });
+  document.getElementById('btn-levels-back').addEventListener('click', openMenu);
+  document.getElementById('btn-upgrades-back').addEventListener('click', openMenu);
   continueBtn.addEventListener('click', () => {
     ensureAudio();
     mode = 'play';
     hideScreens();
     hud.classList.remove('hidden');
     for (const item of decor) item.group.visible = false;
+    for (const cat of cats) if (!cat.dead) cat.group.visible = true;
+    applyTheme(currentLevel().world);
     canvas.focus();
   });
   document.getElementById('btn-pause').addEventListener('click', pause);
   document.getElementById('btn-resume').addEventListener('click', resume);
-  document.getElementById('btn-retry').addEventListener('click', startRun);
-  document.getElementById('btn-again').addEventListener('click', startRun);
+  document.getElementById('btn-retry').addEventListener('click', () => startRun(levelId));
+  document.getElementById('btn-again').addEventListener('click', () => startRun());
   document.getElementById('btn-quit').addEventListener('click', openMenu);
   document.getElementById('btn-end-menu').addEventListener('click', openMenu);
   document.getElementById('btn-mute').addEventListener('click', toggleMute);
   document.getElementById('btn-mute-2').addEventListener('click', toggleMute);
+  const fatBtn = document.getElementById('b-fat');
+  fatBtn.addEventListener('pointerdown', (event) => {
+    event.preventDefault();
+    ensureAudio();
+    if (fatality) advanceFatality('fatality');
+  });
+}
+
+function renderLevels() {
+  const grid = document.getElementById('level-grid');
+  grid.replaceChildren();
+  for (const world of WORLDS) {
+    const label = document.createElement('div');
+    label.className = 'lv-world';
+    label.textContent = `${world.id} · ${world.name}`;
+    grid.appendChild(label);
+    for (const level of LEVELS) {
+      if (level.world !== world.id) continue;
+      const button = document.createElement('button');
+      button.type = 'button';
+      const open = level.id <= progress.unlocked;
+      button.className = `lv${open ? '' : ' lock'}${progress.bests[level.id] ? ' cleared' : ''}`;
+      button.disabled = !open;
+      button.innerHTML = `<b>${level.id}</b>`;
+      button.setAttribute('aria-label', `Level ${level.id} ${level.name}`);
+      button.title = level.name;
+      button.addEventListener('click', () => startRun(level.id));
+      grid.appendChild(button);
+    }
+  }
+}
+
+function renderUpgrades() {
+  const list = document.getElementById('upgrade-list');
+  document.getElementById('upgrade-wallet').textContent = `${progress.coins} coins`;
+  list.replaceChildren();
+  for (const upgrade of UPGRADES) {
+    const rank = progress.upgrades[upgrade.id] || 0;
+    const cost = upgrade.cost * (rank + 1);
+    const row = document.createElement('button');
+    row.type = 'button';
+    row.className = 'up-row';
+    const maxed = rank >= upgrade.max;
+    row.disabled = maxed || progress.coins < cost;
+    row.textContent = maxed
+      ? `${upgrade.name} ${rank}/${upgrade.max} · MAX`
+      : `${upgrade.name} ${rank}/${upgrade.max} · ${upgrade.desc} · ${cost} coins`;
+    row.addEventListener('click', () => {
+      const now = progress.upgrades[upgrade.id] || 0;
+      const price = upgrade.cost * (now + 1);
+      if (now >= upgrade.max || progress.coins < price) return;
+      progress.coins -= price;
+      progress.upgrades[upgrade.id] = now + 1;
+      writeSave();
+      renderUpgrades();
+      refreshMenu();
+      sfx('heal');
+    });
+    list.appendChild(row);
+  }
+}
+
+const THEMES = {
+  1: { fog: 0x3a2038, top: 0x100818, mid: 0xc45b68, bot: 0x2a1422, ground: 0xcec4b8, deck: 0xd0894a, outer: 0x241820, petal: 0xffb7c5, light: 0xff9444, glow: 0xffaa66, mountain: 0x1a1222, torii: 0xd24b3c, sun: 0xfff0dc, sunI: 2.5, rim: 0x9ec8ff, flora: 'cherry' },
+  2: { fog: 0x1c3328, top: 0x0c1812, mid: 0x7dbe86, bot: 0x163024, ground: 0x8aa56e, deck: 0x9a7340, outer: 0x142018, petal: 0xd7ecb0, light: 0xd6ee8a, glow: 0xe4ffb0, mountain: 0x1a2c22, torii: 0x6e9a48, sun: 0xf0ffd8, sunI: 2.3, rim: 0xb7e0c0, flora: 'bamboo' },
+  3: { fog: 0x1a1430, top: 0x0a0816, mid: 0x5a3d78, bot: 0x120e1c, ground: 0x6a6278, deck: 0x4a3c58, outer: 0x100c18, petal: 0xc8b8e8, light: 0xb48cff, glow: 0xd0b8ff, mountain: 0x161222, torii: 0x3a3058, sun: 0xd0c8ff, sunI: 1.7, rim: 0x8870c0, flora: 'none' },
+  4: { fog: 0x3a140c, top: 0x1a0a08, mid: 0xe06030, bot: 0x2a0c08, ground: 0x5a4038, deck: 0x6a3828, outer: 0x24100c, petal: 0xffb070, light: 0xff6622, glow: 0xff8844, mountain: 0x2a1612, torii: 0x8a3018, sun: 0xffc090, sunI: 2.6, rim: 0xff8060, flora: 'lava' },
+  5: { fog: 0x243848, top: 0x101820, mid: 0x9ec4e0, bot: 0x1a2838, ground: 0xd5e4ee, deck: 0xc5d8e6, outer: 0x1a2830, petal: 0xf4fbff, light: 0xd0ecff, glow: 0xeaf6ff, mountain: 0xc5d4e0, torii: 0xe8f4ff, sun: 0xf0f6ff, sunI: 2.4, rim: 0xb7d8ff, flora: 'ice' },
+  6: { fog: 0x140818, top: 0x07060f, mid: 0x3a1860, bot: 0x120814, ground: 0x2a2438, deck: 0x1c1830, outer: 0x0c0814, petal: 0x7af0ff, light: 0xff3d9a, glow: 0x22f0ff, mountain: 0x120818, torii: 0xff2f86, sun: 0xc080ff, sunI: 1.5, rim: 0x22e0ff, flora: 'neon' },
+  7: { fog: 0x2a2410, top: 0x14180c, mid: 0xc6a050, bot: 0x1c1a10, ground: 0xa09060, deck: 0x8a7040, outer: 0x1a1810, petal: 0xf0d080, light: 0xffcc66, glow: 0xffe0a0, mountain: 0x3a3420, torii: 0xc49030, sun: 0xffe2b0, sunI: 2.5, rim: 0xe0c070, flora: 'cherry' },
+  8: { fog: 0x1a1c22, top: 0x0c0e12, mid: 0x6a3030, bot: 0x14161c, ground: 0x6a6e74, deck: 0x4a4e54, outer: 0x121418, petal: 0xd0d4d8, light: 0xff5544, glow: 0xff7766, mountain: 0x1a1c22, torii: 0x8a3030, sun: 0xffd0c0, sunI: 1.8, rim: 0xff8060, flora: 'spike' },
+  9: { fog: 0x100818, top: 0x05040a, mid: 0x3a1868, bot: 0x0a0612, ground: 0x2a2040, deck: 0x1a1230, outer: 0x08060e, petal: 0xd0a0ff, light: 0xaa66ff, glow: 0xe0b0ff, mountain: 0x100818, torii: 0x402060, sun: 0xc090ff, sunI: 1.2, rim: 0x8040c0, flora: 'none' },
+  10: { fog: 0x3a2818, top: 0x1a100c, mid: 0xe0b060, bot: 0x2a1810, ground: 0xe0c8a0, deck: 0xd0a060, outer: 0x241810, petal: 0xffe0b0, light: 0xffcc77, glow: 0xffe2a8, mountain: 0x3a2818, torii: 0xe0a040, sun: 0xfff0d0, sunI: 2.7, rim: 0xffe0b0, flora: 'banner' },
+};
+
+function applyTheme(worldId) {
+  const theme = THEMES[worldId] || THEMES[1];
+  if (!stage.sky) return;
+  scene.fog.color.set(theme.fog);
+  scene.background.set(theme.fog);
+  stage.sky.uniforms.top.value.set(theme.top);
+  stage.sky.uniforms.mid.value.set(theme.mid);
+  stage.sky.uniforms.bot.value.set(theme.bot);
+  stage.ground.material.color.set(theme.ground);
+  stage.deck.material.color.set(theme.deck);
+  stage.outer.material.color.set(theme.outer);
+  stage.petalMat.color.set(theme.petal);
+  stage.toriiRed.color.set(theme.torii);
+  stage.mountains.forEach((mesh) => mesh.material.color.set(theme.mountain));
+  stage.lights.forEach((light) => light.color.set(theme.light));
+  stage.houses.forEach((mesh) => {
+    mesh.material.color.set(theme.light);
+    mesh.material.emissive.set(theme.light);
+  });
+  stage.glows.forEach((sprite) => sprite.material.color.set(theme.glow));
+  if (sun) {
+    sun.color.set(theme.sun);
+    sun.intensity = theme.sunI;
+  }
+  if (rimLight) rimLight.color.set(theme.rim);
+  stage.cherries.forEach((tree) => { tree.visible = theme.flora === 'cherry'; });
+  if (stage.bamboo) stage.bamboo.visible = theme.flora === 'bamboo';
+  if (stage.lava) stage.lava.visible = theme.flora === 'lava';
+  if (stage.ice) stage.ice.visible = theme.flora === 'ice';
+  if (stage.neon) stage.neon.visible = theme.flora === 'neon';
+  if (stage.spikes) stage.spikes.visible = theme.flora === 'spike';
+  if (stage.banners) stage.banners.visible = theme.flora === 'banner';
 }
 
 function moveStick(event) {
@@ -1897,6 +2191,7 @@ function buildArena() {
   );
   sky.frustumCulled = false;
   scene.add(sky);
+  stage.sky = sky.material;
 
   const starPositions = [];
   for (let i = 0; i < 180; i++) {
@@ -1926,6 +2221,7 @@ function buildArena() {
     const mountain = new THREE.Mesh(new THREE.ConeGeometry(4 + (i % 3), 7 + (i % 4) * 1.6, 5), std(0x1a1222, 1, 0));
     mountain.position.set(Math.sin(angle) * 30, 2.2, Math.cos(angle) * 30);
     scene.add(mountain);
+    stage.mountains.push(mountain);
   }
 
   const outer = new THREE.Mesh(new THREE.CircleGeometry(46, 40), std(0x241820, 1, 0));
@@ -1933,6 +2229,7 @@ function buildArena() {
   outer.position.y = -0.05;
   outer.receiveShadow = true;
   scene.add(outer);
+  stage.outer = outer;
 
   const stone = paintedTexture((g) => {
     g.fillStyle = '#6e655c';
@@ -1953,6 +2250,7 @@ function buildArena() {
   ground.rotation.x = -Math.PI / 2;
   ground.receiveShadow = true;
   scene.add(ground);
+  stage.ground = ground;
 
   const wood = paintedTexture((g) => {
     g.fillStyle = '#8a5a32';
@@ -1969,6 +2267,7 @@ function buildArena() {
   deck.position.y = 0.02;
   deck.receiveShadow = true;
   scene.add(deck);
+  stage.deck = deck;
 
   const emblem = new THREE.Mesh(new THREE.CircleGeometry(1.4, 32), new THREE.MeshBasicMaterial({ map: emblemTex, transparent: true }));
   emblem.rotation.x = -Math.PI / 2;
@@ -2013,6 +2312,7 @@ function buildArena() {
   torii.position.set(0, 0, -9.55);
   torii.traverse((obj) => { if (obj.isMesh) { obj.castShadow = true; obj.receiveShadow = true; } });
   scene.add(torii);
+  stage.toriiRed = vermilion;
   props.push({ x: -1.2, z: -9.55, r: 0.38 }, { x: 1.2, z: -9.55, r: 0.38 });
 
   const bark = std(0x4a3024, 0.9, 0);
@@ -2036,6 +2336,7 @@ function buildArena() {
     tree.position.set(Math.sin(angle) * radius, 0, Math.cos(angle) * radius);
     tree.scale.setScalar(0.9 + (i % 3) * 0.18);
     scene.add(tree);
+    stage.cherries.push(tree);
   }
 
   const glow = glowTexture();
@@ -2055,15 +2356,18 @@ function buildArena() {
     group.add(pole, house, roof);
     group.position.set(x, 0, z);
     scene.add(group);
-    const light = new THREE.PointLight(0xff9444, 18, 9, 2);
+    const light = new THREE.PointLight(0xff9444, touchOn ? 12 : 18, 9, 2);
     light.position.set(x, 1.5, z);
     scene.add(light);
+    stage.lights.push(light);
+    stage.houses.push(house);
     const sprite = new THREE.Sprite(new THREE.SpriteMaterial({
       map: glow, color: 0xffaa66, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, opacity: 0.8,
     }));
     sprite.position.set(x, 1.45, z);
     sprite.scale.set(1.6, 1.6, 1);
     scene.add(sprite);
+    stage.glows.push(sprite);
     props.push({ x, z, r: 0.4 });
   });
 
@@ -2084,6 +2388,71 @@ function buildArena() {
     });
   }
   scene.add(petals);
+  stage.petalMat = petalMat;
+  stage.fog = scene.fog;
+
+  const bamboo = new THREE.Group();
+  for (let i = 0; i < 14; i++) {
+    const angle = (i / 14) * Math.PI * 2 + 0.2;
+    const stalk = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.1, 4.2, 6), std(0x7ea85a, 0.8, 0));
+    stalk.position.set(Math.sin(angle) * 12.4, 2.1, Math.cos(angle) * 12.4);
+    bamboo.add(stalk);
+  }
+  bamboo.visible = false;
+  scene.add(bamboo);
+  stage.bamboo = bamboo;
+
+  const lava = new THREE.Mesh(new THREE.TorusGeometry(8.2, 0.28, 8, 40), new THREE.MeshStandardMaterial({ color: 0xff5a22, emissive: 0xff3a10, emissiveIntensity: 0.8, roughness: 0.45 }));
+  lava.rotation.x = Math.PI / 2;
+  lava.position.y = 0.05;
+  lava.visible = false;
+  scene.add(lava);
+  stage.lava = lava;
+
+  const ice = new THREE.Group();
+  for (let i = 0; i < 8; i++) {
+    const shard = new THREE.Mesh(new THREE.ConeGeometry(0.28, 1.1, 5), std(0xe7f6ff, 0.15, 0.2));
+    const angle = (i / 8) * Math.PI * 2;
+    shard.position.set(Math.sin(angle) * 8.5, 0.5, Math.cos(angle) * 8.5);
+    ice.add(shard);
+  }
+  ice.visible = false;
+  scene.add(ice);
+  stage.ice = ice;
+
+  const neon = new THREE.Group();
+  for (let i = 0; i < 6; i++) {
+    const bar = new THREE.Mesh(new THREE.BoxGeometry(0.12, 2.4, 0.12), new THREE.MeshStandardMaterial({ color: i % 2 ? 0xff3d9a : 0x22f0ff, emissive: i % 2 ? 0xff3d9a : 0x22f0ff, emissiveIntensity: 0.9 }));
+    const angle = (i / 6) * Math.PI * 2;
+    bar.position.set(Math.sin(angle) * 10.6, 1.2, Math.cos(angle) * 10.6);
+    neon.add(bar);
+  }
+  neon.visible = false;
+  scene.add(neon);
+  stage.neon = neon;
+
+  const spikes = new THREE.Group();
+  for (let i = 0; i < 10; i++) {
+    const spike = new THREE.Mesh(new THREE.ConeGeometry(0.22, 1.3, 4), std(0x8a9098, 0.4, 0.45));
+    const angle = (i / 10) * Math.PI * 2;
+    spike.position.set(Math.sin(angle) * 9.2, 0.65, Math.cos(angle) * 9.2);
+    spikes.add(spike);
+  }
+  spikes.visible = false;
+  scene.add(spikes);
+  stage.spikes = spikes;
+
+  const banners = new THREE.Group();
+  for (let i = 0; i < 6; i++) {
+    const cloth = new THREE.Mesh(new THREE.PlaneGeometry(0.7, 1.5), new THREE.MeshStandardMaterial({ color: 0xe8c56a, roughness: 0.6, side: THREE.DoubleSide }));
+    const angle = (i / 6) * Math.PI * 2;
+    cloth.position.set(Math.sin(angle) * 10.2, 1.3, Math.cos(angle) * 10.2);
+    cloth.lookAt(0, 1.3, 0);
+    banners.add(cloth);
+  }
+  banners.visible = false;
+  scene.add(banners);
+  stage.banners = banners;
 
   const sparkGeo = new THREE.SphereGeometry(0.055, 6, 5);
   for (let i = 0; i < 40; i++) {
@@ -2092,6 +2461,7 @@ function buildArena() {
     scene.add(mesh);
     sparkPool.push(mesh);
   }
+  applyTheme(1);
 }
 
 function boot() {
@@ -2125,6 +2495,7 @@ function boot() {
   const rim = new THREE.DirectionalLight(0x9ec8ff, 0.9);
   rim.position.set(-8, 6, 8);
   scene.add(rim);
+  rimLight = rim;
 
   blobMat = new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.33, depthWrite: false });
   blobMat.userData.shared = true;
@@ -2210,7 +2581,7 @@ function boot() {
       updatePlayer(dt);
       updateCats(dt);
       updatePickups(dt);
-      updateWaves(dt);
+      updateRooms(dt);
       if (ending) {
         endDelay -= dt;
         if (endDelay <= 0) showEnd(ending);
@@ -2228,7 +2599,9 @@ function boot() {
   }
   frame();
 
-  if (new URLSearchParams(location.search).has('play')) startRun();
+  const params = new URLSearchParams(location.search);
+  if (params.has('level')) startRun(Number(params.get('level')) || 1);
+  else if (params.has('play')) startRun();
   if ('serviceWorker' in navigator && location.protocol !== 'file:') {
     navigator.serviceWorker.register('./sw.js').catch(() => {});
   }
@@ -2237,14 +2610,30 @@ function boot() {
     ready: true,
     player,
     cats,
+    progress,
+    LEVELS,
+    WORLDS,
+    BOSSES,
     get mode() { return mode; },
     get score() { return score; },
+    get levelId() { return levelId; },
+    get roomIndex() { return roomIndex; },
+    get fatality() { return fatality ? fatality.step : null; },
     get frames() { return frames; },
+    fog() { return scene.fog.color.getHexString(); },
+    flora() { return (THEMES[currentLevel()?.world || 1] || THEMES[1]).flora; },
     start: startRun,
     attack() { buffer.attack = 0.2; },
     jump() { buffer.jump = 0.2; },
     dodge() { buffer.dodge = 0.2; },
     special() { buffer.special = 0.2; },
+    fatalityHit() { advanceFatality('fatality'); },
+    clearRoom() {
+      for (const cat of cats) {
+        if (!cat.dead) killCat(cat);
+      }
+      spawnQueue.length = 0;
+    },
   };
 }
 

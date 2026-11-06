@@ -1,7 +1,7 @@
 {
   "name": "COCORO 3D",
   "short_name": "COCORO 3D",
-  "description": "Black-and-tan Shiba samurai versus hostile cats in a moonlit courtyard.",
+  "description": "Fifty levels across ten worlds. A black-and-tan Shiba samurai fights hostile cats.",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",

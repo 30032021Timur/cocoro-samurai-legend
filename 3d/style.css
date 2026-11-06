@@ -407,6 +407,73 @@ h1 {
 #b-block { right: 18px; bottom: 162px; }
 #b-dodge { right: 112px; bottom: 108px; }
 #b-ki { right: 168px; bottom: 52px; }
+#b-fat { right: 8px; bottom: 62px; width: 92px; height: 92px; display: none; background: linear-gradient(180deg, #ffb067, #c44722); color: #2a100c; font-size: 11px; }
+body.finishing #b-fat { display: block; }
+body.finishing #b-slash { display: none; }
+
+#finish {
+  display: none;
+  position: fixed;
+  z-index: 7;
+  left: 50%;
+  top: 18%;
+  transform: translateX(-50%);
+  text-align: center;
+  pointer-events: none;
+}
+#finish.show { display: block; }
+#finish b {
+  display: block;
+  font-family: var(--display);
+  font-size: clamp(28px, 6vw, 64px);
+  letter-spacing: 0.08em;
+  color: #fff4d2;
+  text-shadow: 0 4px 0 #4a1c12;
+}
+#finish p { margin: 6px 0; letter-spacing: 0.12em; font-weight: 800; }
+#finish-pips span {
+  display: inline-grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  margin: 0 4px;
+  border-radius: 50%;
+  border: 1px solid var(--gold);
+  font-weight: 800;
+}
+#finish-pips span.on { background: var(--gold); color: #2a160c; }
+
+#level-grid, #upgrade-list { margin-top: 10px; }
+#level-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 6px;
+  max-height: min(52vh, 460px);
+  overflow: auto;
+  padding-right: 2px;
+}
+.lv-world {
+  grid-column: 1 / -1;
+  margin-top: 8px;
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  font-weight: 800;
+  color: var(--gold);
+}
+.lv, .up-row {
+  min-height: 46px;
+  border-radius: 12px;
+  border: 1px solid rgba(231, 197, 106, 0.45);
+  background: rgba(18, 10, 18, 0.72);
+  color: var(--cream);
+  font-family: var(--ui);
+  font-weight: 800;
+}
+.lv.cleared { border-color: var(--cyan); }
+.lv.lock, .up-row:disabled { opacity: 0.38; }
+#upgrade-list { display: flex; flex-direction: column; gap: 8px; }
+.up-row { text-align: left; padding: 10px 12px; }
+#screen-levels .panel, #screen-upgrades .panel { max-height: calc(100vh - 28px); overflow: auto; }
 
 #buttons button.cd { opacity: 0.45; }
 #buttons button.ready { box-shadow: 0 0 16px rgba(73, 198, 255, 0.85); }

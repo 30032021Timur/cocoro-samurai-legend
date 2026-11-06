@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
   <meta name="theme-color" content="#140c16" />
-  <meta name="description" content="COCORO 3D — a black-and-tan Shiba samurai fights hostile cats in a moonlit courtyard." />
+  <meta name="description" content="COCORO 3D — fifty levels across ten worlds. A black-and-tan Shiba samurai fights hostile cats." />
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
@@ -29,8 +29,8 @@
       <div class="bar ki"><span id="kiFill"></span><em>KI</em></div>
     </div>
     <div class="hud-center">
-      <div id="areaName">MOON COURTYARD</div>
-      <div id="waveText">WAVE 1 / 5</div>
+      <div id="areaName">SAKURA VILLAGE</div>
+      <div id="waveText">VILLAGE GATE</div>
       <div id="bossWrap" class="hidden">
         <span id="bossName">MOMO</span>
         <div class="bar boss"><span id="bossFill"></span></div>
@@ -38,6 +38,7 @@
     </div>
     <div class="hud-right">
       <button id="btn-pause" type="button" aria-label="Pause">II</button>
+      <div id="coinPill">0</div>
       <div id="scorePill">0</div>
       <div id="comboPill">COMBO</div>
     </div>
@@ -58,7 +59,14 @@
       <button id="b-jump" type="button" data-act="jump">JUMP</button>
       <button id="b-ki" type="button" data-act="special">KI</button>
       <button id="b-slash" type="button" data-act="attack">SLASH</button>
+      <button id="b-fat" type="button">FATALITY</button>
     </div>
+  </div>
+
+  <div id="finish" aria-live="polite">
+    <b>FINISH HIM!</b>
+    <p>J · J · U &nbsp;or&nbsp; FATALITY ×3</p>
+    <div id="finish-pips"><span>J</span><span>J</span><span>U</span></div>
   </div>
 
   <section id="screen-menu" class="screen">
@@ -66,16 +74,18 @@
       <div class="brand">
         <img src="./icons/icon-192.png" width="74" height="74" alt="COCORO emblem" />
         <div>
-          <p class="eyebrow">3D COURTYARD</p>
+          <p class="eyebrow">TEN WORLDS · 50 LEVELS</p>
           <h1>COCORO</h1>
           <p class="sub">SAMURAI LEGEND</p>
         </div>
       </div>
-      <p class="tag">Black-and-tan Shiba samurai. Hostile cats. One moonlit courtyard.</p>
+      <p class="tag">Black-and-tan Shiba samurai. Hostile cats. Clear a level to unlock the next.</p>
       <p class="meta" id="menu-best"></p>
       <div class="col">
         <button id="btn-play" class="primary" type="button">PLAY</button>
         <button id="btn-continue" class="ghost hidden" type="button">CONTINUE</button>
+        <button id="btn-levels" type="button" class="ghost">LEVEL SELECT</button>
+        <button id="btn-upgrades" type="button" class="ghost">UPGRADES</button>
         <button id="btn-mute" class="sound" type="button">SOUND ON</button>
       </div>
       <ul class="help">
@@ -83,8 +93,9 @@
         <li>J or SLASH chains jab, kick, katana, and a spinning slash.</li>
         <li>K or BLOCK softens frontal hits. Tap it as the claw lands for COUNTER.</li>
         <li>L or DODGE rolls through attacks. U or KI spends ki on Thunder Slash.</li>
-        <li>Cats scratch, pounce, and slam. The glowing ring marks the strike.</li>
-        <li>Drag to orbit the camera.</li>
+        <li>Cats scratch, pounce, guard, and slam. The glowing ring marks the strike.</li>
+        <li>Bosses have three phases. At the end: FINISH HIM, then J, J, U.</li>
+        <li>Drag to orbit the camera. Coins buy upgrades.</li>
       </ul>
     </div>
   </section>
@@ -100,6 +111,26 @@
         <button id="btn-quit" class="ghost" type="button">QUIT</button>
         <button id="btn-mute-2" class="sound" type="button">SOUND ON</button>
       </div>
+    </div>
+  </section>
+
+  <section id="screen-levels" class="screen hidden">
+    <div class="panel">
+      <p class="eyebrow">TEN WORLDS</p>
+      <h1>LEVELS</h1>
+      <p class="tag">Clear a level to unlock the next. Replay any open level.</p>
+      <div id="level-grid"></div>
+      <button id="btn-levels-back" class="ghost" type="button">BACK</button>
+    </div>
+  </section>
+
+  <section id="screen-upgrades" class="screen hidden">
+    <div class="panel">
+      <p class="eyebrow">EARNED IN BATTLE</p>
+      <h1>UPGRADES</h1>
+      <p id="upgrade-wallet" class="tag"></p>
+      <div id="upgrade-list"></div>
+      <button id="btn-upgrades-back" class="ghost" type="button">BACK</button>
     </div>
   </section>
 
