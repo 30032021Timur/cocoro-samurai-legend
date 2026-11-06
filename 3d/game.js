@@ -1,6 +1,7 @@
 import * as THREE from './vendor/three.module.js';
 import { WORLDS, UPGRADES, BOSSES, LEVELS } from './campaign.js';
 import { buildPlace } from './places.js';
+import { createHero, createFighter } from './actors.js';
 
 const ARENA_R = 11.15;
 const SAVE_KEY = 'cocoro-3d-v2';
@@ -8,7 +9,7 @@ const ATTACKS = [
   { dur: 0.28, active: [0.06, 0.16], range: 1.9, radius: 0.72, dmg: 14, knock: 1.8, lunge: 3.4, launch: 0.2 },
   { dur: 0.32, active: [0.08, 0.18], range: 2.0, radius: 0.78, dmg: 16, knock: 2.6, lunge: 4.4, launch: 1.2, kick: true },
   { dur: 0.4, active: [0.12, 0.26], range: 2.35, radius: 0.9, dmg: 20, knock: 4.2, lunge: 5.2, launch: 2.2, shuh: true },
-  { dur: 0.5, active: [0.1, 0.36], range: 2.65, radius: 1.35, dmg: 26, knock: 7.2, lunge: 2.2, launch: 4.2, aoe: true, shuh: true },
+  { dur: 0.5, active: [0.1, 0.36], range: 2.65, radius: 1.35, dmg: 34, knock: 8, lunge: 2.4, launch: 4.8, aoe: true, heavy: true },
 ];
 const SLOTS = [
   { x: -1.2, z: -8.1 },
@@ -18,11 +19,12 @@ const SLOTS = [
   { x: 0.1, z: -8.8 },
 ];
 const KINDS = {
-  alley: { hp: 40, speed: 3.2, damage: 8, range: 1.5, windup: 0.4, recover: 0.32, cool: 0.85, scale: 1, hurt: 0.32, leap: false, body: 0xe8883a, dark: 0xc45c22, belly: 0xf2d2b0, ear: 0xf2c2a4, eye: 0xffe38a },
-  pounce: { hp: 30, speed: 5.05, damage: 11, range: 1.75, windup: 0.28, recover: 0.34, cool: 1.0, scale: 0.92, hurt: 0.24, leap: true, body: 0x2b2932, dark: 0x14141a, belly: 0x3a3844, ear: 0xf0b8c8, eye: 0xd2b0ff },
-  blade: { hp: 56, speed: 3.35, damage: 11, range: 1.68, windup: 0.36, recover: 0.3, cool: 0.8, scale: 1.05, hurt: 0.22, leap: false, guard: true, body: 0xc9a36a, dark: 0x3a2a1c, belly: 0xf3ddc0, ear: 0xe7c7a4, eye: 0xffe08a },
-  brute: { hp: 108, speed: 2.15, damage: 15, range: 1.9, windup: 0.55, recover: 0.46, cool: 1.15, scale: 1.4, hurt: 0.18, leap: false, body: 0xf4efe4, dark: 0x2a241c, belly: 0xfff8ee, ear: 0xf0b090, eye: 0xffe08a },
-  boss: { hp: 360, speed: 2.6, damage: 16, range: 2.2, windup: 0.46, recover: 0.38, cool: 0.8, scale: 2.08, hurt: 0.1, leap: false, body: 0xf7f4ee, dark: 0x171717, belly: 0xfffaf4, ear: 0x171717, eye: 0xffd0a8 },
+  samurai: { hp: 42, speed: 3.1, damage: 8, range: 1.55, windup: 0.42, recover: 0.34, cool: 0.95, scale: 0.98, hurt: 0.3, role: 'samurai', guard: true, body: 0x1c140f, dark: 0x8a1c24, belly: 0xd7b189, ear: 0xf3e0c6, eye: 0xffe08a, armor: 0x9a1e24 },
+  ninja: { hp: 28, speed: 5.1, damage: 9, range: 1.65, windup: 0.26, recover: 0.28, cool: 0.75, scale: 0.92, hurt: 0.22, leap: true, role: 'ninja', body: 0x16161a, dark: 0xc4232e, belly: 0x2a2a30, ear: 0xf0b8c0, eye: 0xff6a6a, armor: 0x1a1a1e },
+  archer: { hp: 26, speed: 3.2, damage: 7, range: 7.2, windup: 0.48, recover: 0.4, cool: 1.25, scale: 0.94, hurt: 0.24, role: 'archer', ranged: true, body: 0xf4f1ea, dark: 0xc4232e, belly: 0xfff8f0, ear: 0xf7f4ef, eye: 0x66e0ff, armor: 0x8a1e24 },
+  heavy: { hp: 96, speed: 2.05, damage: 14, range: 1.9, windup: 0.58, recover: 0.5, cool: 1.15, scale: 1.12, hurt: 0.16, role: 'heavy', body: 0x6a5648, dark: 0x2a241c, belly: 0xe7d2b8, ear: 0xd7b189, eye: 0xffe08a, armor: 0x4a4e55 },
+  assassin: { hp: 32, speed: 4.3, damage: 8, range: 1.6, windup: 0.32, recover: 0.3, cool: 0.85, scale: 0.92, hurt: 0.22, role: 'assassin', poison: true, body: 0x2a2438, dark: 0x6a48a8, belly: 0x3a3450, ear: 0xd0b8e8, eye: 0xc9a6ff, armor: 0x3a2060 },
+  general: { hp: 280, speed: 2.45, damage: 13, range: 2.25, windup: 0.46, recover: 0.4, cool: 0.8, scale: 1.3, hurt: 0.12, role: 'general', body: 0x1c140f, dark: 0xb01c24, belly: 0xd7b189, ear: 0xf3e0c6, eye: 0xffe08a, armor: 0xe6c36a },
 };
 
 const COL = {
@@ -70,6 +72,10 @@ let muted = !!progress.muted;
 let levelId = 1;
 let roomIndex = -1;
 let route = null;
+let hero = null;
+let heroSword = null;
+let blobMat = null;
+let emblemTex = null;
 let marker = null;
 let lastJumpTap = 0;
 let fatality = null;
@@ -127,7 +133,6 @@ const dummy = new THREE.Object3D();
 let renderer;
 let scene;
 let camera;
-let hero;
 let petals;
 let petalData = [];
 let sun;
@@ -341,230 +346,43 @@ function paintedTexture(draw, repeatX, repeatY) {
 }
 
 function buildHero() {
-  const root = new THREE.Group();
-  const spin = new THREE.Group();
-  const model = new THREE.Group();
-  root.add(spin);
-  spin.add(model);
-
-  const earGeo = new THREE.ConeGeometry(0.09, 0.28, 8);
-  const torso = addMesh(model, new THREE.SphereGeometry(0.34, 20, 16), std(COL.black, 0.86, 0.02), 0, 0.78, 0);
-  torso.scale.set(0.92, 0.86, 0.78);
-  const chest = addMesh(model, new THREE.SphereGeometry(0.2, 14, 12), std(COL.tan, 0.84, 0), 0, 0.7, 0.16);
-  chest.scale.set(1.05, 0.85, 0.55);
-  const hakama = addMesh(model, new THREE.CylinderGeometry(0.24, 0.4, 0.34, 12), std(COL.indigo, 0.78, 0.08), 0, 0.46, 0);
-  const belt = addMesh(model, new THREE.TorusGeometry(0.26, 0.035, 8, 16), std(COL.gold, 0.4, 0.6), 0, 0.62, 0);
-  belt.rotation.x = Math.PI / 2;
-
-  const head = pivot(model, 0, 1.16, 0.05);
-  addMesh(head, new THREE.SphereGeometry(0.3, 20, 16), std(COL.black, 0.84, 0.02), 0, 0, 0);
-  const cheekL = addMesh(head, new THREE.SphereGeometry(0.1, 10, 8), std(COL.tan, 0.84, 0), -0.14, -0.04, 0.16);
-  cheekL.scale.set(1, 0.8, 0.7);
-  const cheekR = cheekL.clone();
-  cheekR.position.x = 0.14;
-  cheekR.material = cheekL.material;
-  head.add(cheekR);
-  const muzzle = addMesh(head, new THREE.SphereGeometry(0.15, 14, 12), std(COL.cream, 0.8, 0), 0, -0.08, 0.18);
-  muzzle.scale.set(1.05, 0.78, 0.85);
-  addMesh(head, new THREE.SphereGeometry(0.045, 10, 8), std(0x140e0c, 0.5, 0.1), 0, -0.05, 0.3);
-  const eyeMat = std(0xf7f4ef, 0.4, 0.05);
-  const pupilMat = std(0x140e0c, 0.3, 0.1);
-  for (const side of [-1, 1]) {
-    addMesh(head, new THREE.SphereGeometry(0.055, 10, 8), eyeMat, side * 0.1, 0.04, 0.24);
-    addMesh(head, new THREE.SphereGeometry(0.03, 8, 6), pupilMat, side * 0.1, 0.04, 0.28);
-    const brow = addMesh(head, new THREE.BoxGeometry(0.09, 0.025, 0.03), std(COL.tan, 0.8, 0), side * 0.11, 0.12, 0.22);
-    brow.rotation.z = side * -0.5;
-  }
-  const earL = pivot(head, -0.16, 0.2, 0);
-  earL.rotation.z = 0.35;
-  addMesh(earL, earGeo, std(COL.black, 0.84, 0), 0, 0.12, 0);
-  addMesh(earL, new THREE.ConeGeometry(0.05, 0.16, 6), std(COL.tan, 0.84, 0), 0, 0.1, 0.02);
-  const earR = pivot(head, 0.16, 0.2, 0);
-  earR.rotation.z = -0.35;
-  addMesh(earR, earGeo, std(COL.black, 0.84, 0), 0, 0.12, 0);
-  addMesh(earR, new THREE.ConeGeometry(0.05, 0.16, 6), std(COL.tan, 0.84, 0), 0, 0.1, 0.02);
-
-  const helm = addMesh(head, new THREE.SphereGeometry(0.32, 16, 12, 0, Math.PI * 2, 0, Math.PI * 0.48), std(COL.armor, 0.38, 0.55), 0, 0.04, -0.02);
-  const rim = addMesh(head, new THREE.TorusGeometry(0.3, 0.02, 8, 20), std(COL.gold, 0.35, 0.7), 0, 0.02, 0);
-  rim.rotation.x = Math.PI / 2.4;
-  const crest = addMesh(head, new THREE.BoxGeometry(0.04, 0.22, 0.12), std(COL.gold, 0.35, 0.65), 0, 0.28, -0.02);
-
-  const emblem = new THREE.Mesh(
-    new THREE.CircleGeometry(0.12, 20),
-    new THREE.MeshBasicMaterial({ map: emblemTex, transparent: true })
-  );
-  emblem.position.set(0, 0.78, 0.3);
-  model.add(emblem);
-  const banner = new THREE.Mesh(
-    new THREE.PlaneGeometry(0.42, 0.54),
-    new THREE.MeshStandardMaterial({ map: emblemTex, roughness: 0.75, metalness: 0.08 })
-  );
-  banner.position.set(0, 0.98, -0.34);
-  banner.rotation.y = Math.PI;
-  banner.castShadow = true;
-  model.add(banner);
-
-  function makeLeg(x) {
-    const leg = pivot(model, x, 0.48, 0);
-    addMesh(leg, new THREE.CylinderGeometry(0.075, 0.06, 0.28, 8), std(COL.black, 0.86, 0), 0, -0.12, 0);
-    addMesh(leg, new THREE.CylinderGeometry(0.07, 0.065, 0.18, 8), std(COL.tan, 0.84, 0), 0, -0.32, 0);
-    addMesh(leg, new THREE.SphereGeometry(0.09, 10, 8), std(COL.cream, 0.8, 0), 0, -0.42, 0.03);
-    return leg;
-  }
-
-  function makeArm(x, right) {
-    const arm = pivot(model, x, 1.02, 0);
-    const shoulder = addMesh(arm, new THREE.SphereGeometry(0.1, 10, 8), std(COL.armor, 0.4, 0.45), 0, 0, 0);
-    addMesh(arm, new THREE.CylinderGeometry(0.055, 0.05, 0.22, 8), std(COL.armor, 0.42, 0.4), 0, -0.16, 0);
-    addMesh(arm, new THREE.SphereGeometry(0.07, 10, 8), std(COL.tan, 0.84, 0), 0, -0.3, 0.02);
-    if (right) {
-      const sword = pivot(arm, 0, -0.32, 0.02);
-      addMesh(sword, new THREE.CylinderGeometry(0.02, 0.02, 0.16, 6), std(COL.wrap, 0.6, 0.2), 0, -0.02, 0);
-      const guard = addMesh(sword, new THREE.CylinderGeometry(0.07, 0.07, 0.02, 8), std(COL.gold, 0.32, 0.7), 0, 0.08, 0);
-      guard.rotation.x = Math.PI / 2;
-      const blade = addMesh(sword, new THREE.BoxGeometry(0.035, 0.78, 0.012), std(COL.blade, 0.22, 0.82), 0, 0.5, 0);
-      blade.material.emissive = new THREE.Color(0x223040);
-      blade.material.emissiveIntensity = 0.25;
-      heroSword = sword;
-    }
-    shoulder.scale.set(1.15, 0.7, 1.15);
-    return arm;
-  }
-
-  const legL = makeLeg(-0.14);
-  const legR = makeLeg(0.14);
-  const armL = makeArm(-0.32, false);
-  const armR = makeArm(0.32, true);
-  const tail = pivot(model, 0, 0.72, -0.28);
-  let ty = 0;
-  for (let i = 0; i < 4; i++) {
-    const seg = addMesh(tail, new THREE.SphereGeometry(0.09 - i * 0.012, 10, 8), std(i > 2 ? COL.tan : COL.black, 0.86, 0), 0, ty + 0.08, -0.02 * i);
-    seg.position.set(0, 0.08 + i * 0.1, -0.05 - i * 0.05);
-  }
-  tail.rotation.x = -0.9;
-
-  const scabbard = addMesh(model, new THREE.BoxGeometry(0.05, 0.55, 0.05), std(0x1a1a1e, 0.45, 0.4), -0.22, 0.48, -0.08);
-  scabbard.rotation.x = 0.5;
-  scabbard.rotation.z = 0.3;
-
-  const shield = new THREE.Mesh(
-    new THREE.CircleGeometry(0.55, 24),
-    new THREE.MeshBasicMaterial({ color: COL.cyan, transparent: true, opacity: 0.28, side: THREE.DoubleSide, depthWrite: false })
-  );
-  shield.position.set(0, 0.9, 0.62);
-  shield.visible = false;
-  model.add(shield);
-
-  const blob = new THREE.Mesh(new THREE.CircleGeometry(0.46, 16), blobMat);
-  blob.rotation.x = -Math.PI / 2;
-  blob.position.y = 0.03;
-  root.add(blob);
-
-  scene.add(root);
-  hero = { root, spin, model, legL, legR, armL, armR, tail, earL, earR, head, shield, blob };
+  const built = createHero(THREE, { std, addMesh, pivot, scene, blobMat, emblemTex });
+  hero = built;
+  heroSword = built.sword;
 }
 
-let heroSword = null;
-let emblemTex;
-let blobMat;
-
 function buildCat(kind, stats = KINDS[kind]) {
-  const group = new THREE.Group();
-  const bodyMat = std(stats.body, 0.78, 0.03);
-  const darkMat = std(stats.dark, 0.8, 0.03);
-  const bellyMat = std(stats.belly, 0.82, 0.02);
-  const body = addMesh(group, new THREE.SphereGeometry(0.42, 16, 12), bodyMat, 0, 0.48, 0);
-  body.scale.set(0.86, 0.72, 1.25);
-  const belly = addMesh(group, new THREE.SphereGeometry(0.24, 12, 10), bellyMat, 0, 0.38, 0.05);
-  belly.scale.set(0.7, 0.45, 1.1);
-  if (kind === 'alley') {
-    for (let i = 0; i < 3; i++) {
-      const stripe = addMesh(group, new THREE.BoxGeometry(0.08, 0.05, 0.22), darkMat, 0, 0.78, -0.18 + i * 0.18);
-      stripe.rotation.z = 0.15 * (i - 1);
-    }
-  } else if (kind === 'blade') {
-    const sword = addMesh(group, new THREE.BoxGeometry(0.04, 0.42, 0.02), std(COL.blade, 0.25, 0.7), 0.28, 0.42, 0.2);
-    sword.rotation.z = -0.4;
-    addMesh(group, new THREE.BoxGeometry(0.12, 0.03, 0.04), std(COL.gold, 0.35, 0.6), 0.22, 0.34, 0.18);
-  } else if (kind === 'brute') {
-    addMesh(group, new THREE.SphereGeometry(0.16, 10, 8), std(0xe07a32, 0.8, 0), 0.16, 0.58, 0.1);
-    addMesh(group, new THREE.SphereGeometry(0.14, 10, 8), darkMat, -0.18, 0.62, -0.05);
-  } else if (kind === 'boss') {
-    const collar = addMesh(group, new THREE.TorusGeometry(0.2, 0.035, 8, 14), std(0xc4363a, 0.5, 0.2), 0, 0.62, 0.42);
-    collar.rotation.x = Math.PI / 2;
-    const bell = addMesh(group, new THREE.SphereGeometry(0.07, 10, 8), std(COL.gold, 0.3, 0.7, 0x6a4a10), 0, 0.5, 0.58);
-    bell.material.emissiveIntensity = 0.4;
-  }
+  const role = stats.role || kind;
+  return createFighter(THREE, { std, addMesh, pivot, scene, blobMat }, role, stats);
+}
 
-  const head = pivot(group, 0, 0.7, 0.48);
-  addMesh(head, new THREE.SphereGeometry(0.28, 16, 12), bodyMat, 0, 0, 0);
-  addMesh(head, new THREE.SphereGeometry(0.12, 10, 8), bellyMat, 0, -0.06, 0.16);
-  addMesh(head, new THREE.SphereGeometry(0.04, 8, 6), std(0x1a120e, 0.45, 0.1), 0, -0.04, 0.26);
-  const eyeMat = std(stats.eye, 0.35, 0.05, stats.eye);
-  eyeMat.emissiveIntensity = kind === 'pounce' || kind === 'boss' ? 0.55 : 0.2;
-  for (const side of [-1, 1]) {
-    addMesh(head, new THREE.SphereGeometry(0.055, 8, 6), eyeMat, side * 0.1, 0.04, 0.2);
-    addMesh(head, new THREE.SphereGeometry(0.028, 8, 6), std(0x140e0c, 0.3, 0), side * 0.1, 0.03, 0.24);
-    const brow = addMesh(head, new THREE.BoxGeometry(0.1, 0.03, 0.03), darkMat, side * 0.11, 0.14, 0.18);
-    brow.rotation.z = side * -0.55;
-    const ear = pivot(head, side * 0.16, 0.18, 0);
-    ear.rotation.z = side * -0.25;
-    addMesh(ear, new THREE.ConeGeometry(0.08, 0.22, 6), kind === 'boss' ? darkMat : bodyMat, 0, 0.1, 0);
-    addMesh(ear, new THREE.ConeGeometry(0.04, 0.12, 6), std(stats.ear, 0.8, 0), 0, 0.08, 0.02);
-  }
-  const tail = pivot(group, 0, 0.58, -0.48);
-  for (let i = 0; i < 3; i++) {
-    addMesh(tail, new THREE.SphereGeometry(0.07 - i * 0.01, 8, 6), i === 2 ? darkMat : bodyMat, 0, 0.05 + i * 0.08, -0.08 - i * 0.06);
-  }
-  const legs = [];
-  [[-0.18, 0.22], [0.18, 0.22], [-0.18, -0.28], [0.18, -0.28]].forEach(([x, z], i) => {
-    const leg = pivot(group, x, 0.36, z);
-    addMesh(leg, new THREE.CylinderGeometry(0.05, 0.045, 0.26, 6), i < 2 ? bodyMat : darkMat, 0, -0.12, 0);
-    addMesh(leg, new THREE.SphereGeometry(0.06, 8, 6), std(0x1a120e, 0.7, 0), 0, -0.26, 0.02);
-    legs.push(leg);
-  });
 
-  group.scale.setScalar(stats.scale);
-  scene.add(group);
-
-  const ring = new THREE.Mesh(
-    new THREE.RingGeometry(0.62, 0.78, 32),
-    new THREE.MeshBasicMaterial({ color: 0xff5530, transparent: true, opacity: 0.7, side: THREE.DoubleSide, depthWrite: false })
-  );
-  ring.rotation.x = -Math.PI / 2;
-  ring.visible = false;
-  scene.add(ring);
-
-  const hpGroup = new THREE.Group();
-  const bg = new THREE.Mesh(new THREE.PlaneGeometry(0.74, 0.09), new THREE.MeshBasicMaterial({ color: 0x2a1214 }));
-  const fill = new THREE.Mesh(new THREE.PlaneGeometry(0.74, 0.09), new THREE.MeshBasicMaterial({ color: kind === 'boss' ? 0xf0c14a : 0x5ddc6a }));
-  fill.position.z = 0.01;
-  hpGroup.add(bg, fill);
-  scene.add(hpGroup);
-
-  const blob = new THREE.Mesh(new THREE.CircleGeometry(0.42 * stats.scale, 14), blobMat);
-  blob.rotation.x = -Math.PI / 2;
-  blob.position.y = 0.025;
-  group.add(blob);
-
-  return { group, body, head, tail, legs, ring, hpGroup, hpFill: fill, mats: [bodyMat, darkMat, bellyMat] };
+function resolveKind(kind, slot) {
+  if (kind === 'boss' || kind === 'general') return 'general';
+  if (kind === 'alley' || kind === 'samurai') return 'samurai';
+  if (kind === 'pounce' || kind === 'ninja') return 'ninja';
+  if (kind === 'brute' || kind === 'heavy') return 'heavy';
+  if (kind === 'archer' || kind === 'assassin') return kind;
+  if (kind === 'blade') return ['archer', 'assassin', 'heavy'][slot % 3];
+  return 'samurai';
 }
 
 function spawnCat(kind, slot, profile) {
-  const baseKind = profile ? 'boss' : kind;
+  const baseKind = resolveKind(profile ? 'general' : kind, slot);
   const stats = { ...KINDS[baseKind] };
   if (profile) {
     stats.hp = profile.hp;
     stats.damage = profile.dmg;
     stats.speed = profile.speed;
     stats.scale = profile.scale;
-    stats.body = profile.body;
-    stats.dark = profile.dark;
-    stats.belly = profile.belly;
-    stats.ear = profile.ear;
-    stats.eye = profile.eye;
+    if (profile.body != null) stats.body = profile.body;
+    if (profile.dark != null) stats.dark = profile.dark;
+    if (profile.belly != null) stats.belly = profile.belly;
+    if (profile.ear != null) stats.ear = profile.ear;
+    if (profile.eye != null) stats.eye = profile.eye;
     stats.hurt = 0.12;
     stats.range = 2.2;
+    stats.role = 'general';
   } else {
     const grow = threat();
     const early = levelId <= 8 ? 0.62 : levelId <= 20 ? 0.82 : 1;
@@ -701,7 +519,8 @@ function killCat(cat) {
 
 function hitCat(cat, dmg, knock, launch) {
   if (cat.dead || cat.finishing || mode !== 'play' || ending) return;
-  dmg = Math.max(1, Math.round(dmg * statAtk()));
+  dmg = Math.max(1, Math.round(dmg * statAtk() * (player.riposte > 0 ? 1.5 : 1)));
+  if (player.riposte > 0) player.riposte = 0;
   if (cat.stats.guard && !cat.boss && cat.state === 'chase' && Math.random() < 0.22) {
     dmg = Math.max(1, Math.round(dmg * 0.4));
     floatText(cat.x, 1.35 * cat.stats.scale, cat.z, 'GUARD', '');
@@ -766,7 +585,9 @@ function hurtPlayer(amount, attacker, heavy) {
       dealt = 0;
       player.ki = Math.min(statMaxKi(), player.ki + 16);
       player.iframe = 0.22;
-      callout('COUNTER!');
+      callout('PARRY');
+      burst(player.x, 1.2, player.z, 0xfff6c0, 10, 3.5);
+      player.riposte = 0.7;
       sfx('counter');
       shake = Math.max(shake, 0.16);
       if (attacker && !attacker.dead) {
@@ -1041,10 +862,13 @@ function beginCatAttack(cat) {
   cat.state = 'attack';
   cat.atkT = 0;
   cat.didHit = false;
-  if (cat.boss) {
+  if (cat.stats.ranged) cat.pattern = 'shot';
+  else if (cat.stats.poison) cat.pattern = 'poison';
+  else if (cat.boss) {
     cat.step = (cat.step + 1) % 3;
     cat.pattern = ['claw', 'slam', 'leap'][cat.step];
-  } else if (cat.stats.leap) cat.pattern = 'leap';
+  } else if (cat.stats.role === 'heavy') cat.pattern = 'slam';
+  else if (cat.stats.leap) cat.pattern = 'leap';
   else if (cat.stats.scale > 1.2 && Math.random() < 0.5) cat.pattern = 'slam';
   else cat.pattern = 'claw';
   cat.lockX = player.x;
@@ -1055,6 +879,16 @@ function beginCatAttack(cat) {
 
 function catTryHit(cat) {
   if (cat.didHit || player.dead) return;
+  if (cat.pattern === 'shot') {
+    cat.didHit = true;
+    spawnArrow(cat);
+    return;
+  }
+  if (cat.pattern === 'poison') {
+    cat.didHit = true;
+    spawnCloud(cat);
+    return;
+  }
   const scale = cat.stats.scale;
   if (cat.pattern === 'slam') {
     if (Math.hypot(player.x - cat.x, player.z - cat.z) < 1.15 + 1.35 * scale) {
@@ -1216,11 +1050,13 @@ function updateCat(cat, dt) {
     cat.strafe = -cat.strafe;
     cat.strafeT = 1.1 + Math.random();
   }
-  if (dist < cat.stats.range + cat.radius * 0.3 && cat.cool <= 0 && !player.dead) {
+  const busy = cats.filter((other) => !other.dead && other.state === 'attack').length;
+  const cap = levelId <= 5 ? 1 : 2;
+  if (dist < cat.stats.range + cat.radius * 0.3 && cat.cool <= 0 && !player.dead && busy < cap) {
     beginCatAttack(cat);
     return;
   }
-  const prefer = cat.stats.range * 0.82;
+  const prefer = cat.stats.ranged ? 6.2 : cat.stats.range * 0.82;
   let mx = 0;
   let mz = 0;
   if (dist > prefer) { mx = dx / dist; mz = dz / dist; }
@@ -1230,6 +1066,61 @@ function updateCat(cat, dt) {
   cat.z += mz * cat.stats.speed * dt;
   cat.hop = 0;
   separate(cat);
+}
+
+const shots = [];
+const clouds = [];
+
+function spawnArrow(cat) {
+  const mesh = new THREE.Mesh(new THREE.SphereGeometry(0.1, 6, 6), new THREE.MeshBasicMaterial({ color: 0xffe08a }));
+  mesh.position.set(cat.x, 1.05, cat.z);
+  scene.add(mesh);
+  const dx = player.x - cat.x;
+  const dz = player.z - cat.z;
+  const len = Math.hypot(dx, dz) || 1;
+  shots.push({ mesh, vx: (dx / len) * 10, vz: (dz / len) * 10, life: 1.3, dmg: cat.stats.damage });
+}
+
+function spawnCloud(cat) {
+  const mesh = new THREE.Mesh(new THREE.SphereGeometry(0.7, 8, 6), new THREE.MeshBasicMaterial({ color: 0x9a68d8, transparent: true, opacity: 0.35 }));
+  mesh.position.set(player.x, 0.5, player.z);
+  scene.add(mesh);
+  clouds.push({ mesh, x: player.x, z: player.z, life: 2.2, tick: 0, dmg: Math.max(4, cat.stats.damage - 2) });
+}
+
+function updateHazards(dt) {
+  for (let i = shots.length - 1; i >= 0; i--) {
+    const shot = shots[i];
+    shot.life -= dt;
+    shot.mesh.position.x += shot.vx * dt;
+    shot.mesh.position.z += shot.vz * dt;
+    if (Math.hypot(shot.mesh.position.x - player.x, shot.mesh.position.z - player.z) < 0.7) {
+      hurtPlayer(shot.dmg, { x: shot.mesh.position.x, z: shot.mesh.position.z }, false);
+      shot.life = 0;
+    }
+    if (shot.life <= 0) {
+      scene.remove(shot.mesh);
+      shot.mesh.geometry.dispose();
+      shot.mesh.material.dispose();
+      shots.splice(i, 1);
+    }
+  }
+  for (let i = clouds.length - 1; i >= 0; i--) {
+    const cloud = clouds[i];
+    cloud.life -= dt;
+    cloud.tick -= dt;
+    cloud.mesh.scale.setScalar(1 + (2.2 - cloud.life) * 0.15);
+    if (cloud.tick <= 0 && Math.hypot(player.x - cloud.x, player.z - cloud.z) < 1.1) {
+      cloud.tick = 0.45;
+      hurtPlayer(cloud.dmg, { x: cloud.x, z: cloud.z }, false);
+    }
+    if (cloud.life <= 0) {
+      scene.remove(cloud.mesh);
+      cloud.mesh.geometry.dispose();
+      cloud.mesh.material.dispose();
+      clouds.splice(i, 1);
+    }
+  }
 }
 
 function updateCats(dt) {
@@ -1270,7 +1161,7 @@ function poseCats() {
     cat.tail.rotation.x = -0.6;
     const angry = cat.state === 'attack' && cat.atkT < cat.windup;
     cat.head.rotation.x = angry ? -0.45 : Math.sin(time * 3 + cat.phase) * 0.05;
-    cat.head.position.z = 0.48 + (angry ? -0.06 : 0);
+    if (!cat.biped) cat.head.position.z = 0.48 + (angry ? -0.06 : 0);
     cat.group.position.set(cat.x, cat.hop + cat.lift, cat.z);
     cat.group.rotation.y = cat.yaw;
     cat.group.rotation.z = cat.state === 'hurt' ? Math.sin(time * 30) * 0.08 : 0;
@@ -1279,7 +1170,8 @@ function poseCats() {
     cat.hpFill.scale.x = Math.max(0.001, h);
     cat.hpFill.position.x = (h - 1) * 0.37;
     cat.hpGroup.visible = mode === 'play' && (cat.boss || h < 0.999);
-    cat.hpGroup.position.set(cat.x, 0.95 * cat.stats.scale + 0.45 + cat.hop, cat.z);
+    const barY = (cat.biped ? 1.7 : 0.95) * cat.stats.scale + 0.2 + cat.hop;
+    cat.hpGroup.position.set(cat.x, barY, cat.z);
     cat.hpGroup.lookAt(camera.position.x, cat.hpGroup.position.y, camera.position.z);
   }
 }
@@ -1346,7 +1238,8 @@ function updatePlayer(dt) {
       atk.vfx = true;
       spawnSlash(!!atk.data.aoe);
       sfx('slash');
-      if (atk.data.shuh) callout('SHUH!');
+      if (atk.data.heavy) callout('HEAVY');
+      else if (atk.data.shuh) callout('SHUH!');
     }
     if (atk.t >= atk.data.active[0] && atk.t <= atk.data.active[1]) applyAttack(atk);
     if (atk.t >= atk.dur) {
@@ -1397,6 +1290,7 @@ function updatePlayer(dt) {
 
   player.speed = Math.hypot(player.vx, player.vz);
   if (!player.dead && !ending) player.ki = Math.min(statMaxKi(), player.ki + dt * 3.4);
+  if (player.riposte > 0) player.riposte -= dt;
   if (combo > 0) {
     comboTimer -= dt;
     if (comboTimer <= 0) combo = 0;
@@ -1479,11 +1373,24 @@ function beginRoom() {
   const room = level.rooms[roomIndex];
   applyTheme(level.world);
   if (route) route.setRoom(roomIndex);
-  if (room.boss) {
+  if (level.id === 1 && room.boss) {
+    callout('GENERAL · CAT GENERAL');
+    setObjective('Defeat the boss');
+    spawnQueue = [{ kind: 'general', t: 0.35, slot: 0, profile: { name: 'GENERAL', title: 'CAT GENERAL', hp: 260, dmg: 11, speed: 2.35, scale: 1.32 } }];
+  } else if (room.boss) {
     const profile = BOSSES[room.boss];
     callout(`${profile.name} · ${profile.title}`);
     setObjective('Defeat the boss');
     spawnQueue = [{ kind: 'boss', t: 0.35, slot: 0, profile }];
+  } else if (level.id === 1) {
+    const packs = [
+      ['samurai', 'ninja', 'archer'],
+      ['samurai', 'heavy', 'assassin'],
+      ['ninja', 'archer', 'assassin', 'samurai'],
+    ];
+    callout(room.name);
+    setObjective('Defeat the cats');
+    spawnQueue = (packs[roomIndex] || packs[0]).map((kind, index) => ({ kind, t: 0.2 + index * 0.22, slot: index }));
   } else {
     callout(room.name);
     setObjective('Defeat the cats');
@@ -1588,7 +1495,8 @@ function updateHeroVisual(dt) {
   if (player.dead) {
     hero.root.rotation.z = Math.min(1.25, (hero.root.rotation.z || 0) + dt * 3);
   } else hero.root.rotation.z = 0;
-  if (ending === 'win' && !player.atk) armR = -2.4;
+  if (fatality || (ending === 'win' && !player.atk)) armR = -2.4;
+  if (hero.sword) hero.sword.visible = !!(player.atk || fatality);
   easeRot(hero.legL, legL, 0, 0, dt, 16);
   easeRot(hero.legR, legR, 0, 0, dt, 16);
   easeRot(hero.armL, armL, 0, 0.1, dt, 16);
@@ -1949,6 +1857,7 @@ function startRun(id) {
   player.grounded = true;
   player.blockHeld = false;
   player.blockT = 99;
+  player.riposte = 0;
   blockSrc.key = false;
   blockSrc.mouse = false;
   blockSrc.touch = false;
@@ -2683,7 +2592,7 @@ function boot() {
   const heroLight = new THREE.PointLight(0xfff6e4, 14, 7, 2);
   heroLight.position.set(0, 1.8, 0.6);
   hero.root.add(heroLight);
-  for (const kind of ['alley', 'pounce', 'brute']) {
+  for (const kind of ['samurai', 'ninja', 'archer']) {
     const built = buildCat(kind);
     built.ring.visible = false;
     built.hpGroup.visible = false;
@@ -2722,6 +2631,7 @@ function boot() {
       updateBuffers(dt);
       updatePlayer(dt);
       updateCats(dt);
+      updateHazards(dt);
       updatePickups(dt);
       updateRooms(dt);
       if (ending) {
@@ -2752,6 +2662,7 @@ function boot() {
   window.__cocoro = {
     ready: true,
     player,
+    cam,
     cats,
     progress,
     LEVELS,
