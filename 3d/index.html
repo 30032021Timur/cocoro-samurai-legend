@@ -31,6 +31,7 @@
     <div class="hud-center">
       <div id="areaName">SAKURA VILLAGE</div>
       <div id="waveText">VILLAGE GATE</div>
+      <div id="objective">Defeat the cats</div>
       <div id="bossWrap" class="hidden">
         <span id="bossName">MOMO</span>
         <div class="bar boss"><span id="bossFill"></span></div>
@@ -54,12 +55,23 @@
       <div id="knob"></div>
     </div>
     <div id="buttons">
-      <button id="b-dodge" type="button" data-act="dodge">DODGE</button>
-      <button id="b-block" type="button" data-act="block">BLOCK</button>
+      <button id="b-ki" type="button" data-act="special">SPECIAL</button>
       <button id="b-jump" type="button" data-act="jump">JUMP</button>
-      <button id="b-ki" type="button" data-act="special">KI</button>
-      <button id="b-slash" type="button" data-act="attack">SLASH</button>
+      <button id="b-slash" type="button" data-act="attack">ATTACK</button>
       <button id="b-fat" type="button">FATALITY</button>
+    </div>
+  </div>
+
+  <div id="tutor" class="hidden">
+    <div class="panel">
+      <p class="eyebrow">LEVEL 1</p>
+      <h1>HOW TO PLAY</h1>
+      <ul class="help">
+        <li>Move with the stick or WASD. The camera stays behind you.</li>
+        <li>ATTACK or J hits the nearest cat. JUMP or Space hops. Tap JUMP twice to dash.</li>
+        <li>SPECIAL or U spends energy. Follow the bright arrows. Clear the cats to open the gate.</li>
+      </ul>
+      <button id="btn-tutor" class="primary" type="button">GOT IT</button>
     </div>
   </div>
 
@@ -89,13 +101,10 @@
         <button id="btn-mute" class="sound" type="button">SOUND ON</button>
       </div>
       <ul class="help">
-        <li>Move with WASD or the stick. Space or JUMP double-jumps.</li>
-        <li>J or SLASH chains jab, kick, katana, and a spinning slash.</li>
-        <li>K or BLOCK softens frontal hits. Tap it as the claw lands for COUNTER.</li>
-        <li>L or DODGE rolls through attacks. U or KI spends ki on Thunder Slash.</li>
-        <li>Cats scratch, pounce, guard, and slam. The glowing ring marks the strike.</li>
-        <li>Bosses have three phases. At the end: FINISH HIM, then J, J, U.</li>
-        <li>Drag to orbit the camera. Coins buy upgrades.</li>
+        <li>Walk with WASD or the stick. The camera follows.</li>
+        <li>J or ATTACK strikes the nearest cat. Space or JUMP hops. Tap JUMP twice to dash. U or SPECIAL spends energy.</li>
+        <li>Follow the glowing road. Defeat the cats, then go through the gate.</li>
+        <li>Bosses end with FINISH HIM, then J, J, U.</li>
       </ul>
     </div>
   </section>

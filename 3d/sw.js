@@ -1,9 +1,10 @@
-const CACHE = 'cocoro-3d-v2';
+const CACHE = 'cocoro-3d-v3';
 const ASSETS = [
   './',
   './index.html',
   './game.js',
   './campaign.js',
+  './places.js',
   './style.css',
   './manifest.json',
   './vendor/three.module.js',

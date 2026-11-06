@@ -1,5 +1,6 @@
 import * as THREE from './vendor/three.module.js';
 import { WORLDS, UPGRADES, BOSSES, LEVELS } from './campaign.js';
+import { buildPlace } from './places.js';
 
 const ARENA_R = 11.15;
 const SAVE_KEY = 'cocoro-3d-v2';
@@ -68,6 +69,9 @@ const progress = freshProgress(loadSave());
 let muted = !!progress.muted;
 let levelId = 1;
 let roomIndex = -1;
+let route = null;
+let marker = null;
+let lastJumpTap = 0;
 let fatality = null;
 let runCoins = 0;
 let queuedLevel = 0;
@@ -546,11 +550,14 @@ function spawnCat(kind, slot, profile) {
     stats.range = 2.2;
   } else {
     const grow = threat();
-    stats.hp = Math.round(stats.hp * grow);
-    stats.damage = Math.max(1, Math.round(stats.damage * (1 + (levelId - 1) * 0.03)));
+    const early = levelId <= 8 ? 0.62 : levelId <= 20 ? 0.82 : 1;
+    stats.hp = Math.max(18, Math.round(stats.hp * grow * early));
+    stats.damage = Math.max(1, Math.round(stats.damage * (1 + (levelId - 1) * 0.018) * early));
   }
   const built = buildCat(baseKind, stats);
-  const base = profile ? { x: 0, z: -7.3 } : SLOTS[slot % SLOTS.length];
+  const base = route
+    ? route.encounter(Math.max(0, roomIndex), slot, !!profile)
+    : (profile ? { x: 0, z: -7.3 } : SLOTS[slot % SLOTS.length]);
   const cat = {
     id: catSeq++,
     kind: baseKind,
@@ -1057,6 +1064,15 @@ function catTryHit(cat) {
 }
 
 function separate(entity) {
+  if (route && route.group.visible) {
+    const cx = route.centerX(entity.z);
+    const half = Math.max(1.2, route.halfWidth - 0.45);
+    if (entity.x > cx + half) entity.x = cx + half;
+    if (entity.x < cx - half) entity.x = cx - half;
+    if (entity.z > route.startZ + 2) entity.z = route.startZ + 2;
+    if (entity.z < route.blockZ) entity.z = route.blockZ;
+    return;
+  }
   for (const prop of props) {
     const dx = entity.x - prop.x;
     const dz = entity.z - prop.z;
@@ -1424,8 +1440,10 @@ function updateRooms(dt) {
     }
     if (!announcedClear) {
       announcedClear = true;
-      callout('ROOM CLEAR');
+      callout('GATE OPEN');
+      setObjective('Go to the gate');
       score += 60;
+      if (route && roomIndex + 1 < level.rooms.length) route.setRoom(roomIndex + 1);
     }
     between += dt;
     if (between > 0.85) beginRoom();
@@ -1443,19 +1461,24 @@ function beginRoom() {
   }
   const room = level.rooms[roomIndex];
   applyTheme(level.world);
+  if (route) route.setRoom(roomIndex);
   if (room.boss) {
     const profile = BOSSES[room.boss];
     callout(`${profile.name} · ${profile.title}`);
-    spawnQueue = [{ kind: 'boss', t: 0.4, slot: 0, profile }];
+    setObjective('Defeat the boss');
+    spawnQueue = [{ kind: 'boss', t: 0.35, slot: 0, profile }];
   } else {
     callout(room.name);
-    spawnQueue = room.foes.map((kind, index) => ({ kind, t: 0.25 + index * 0.24, slot: index }));
+    setObjective('Defeat the cats');
+    spawnQueue = room.foes.map((kind, index) => ({ kind, t: 0.2 + index * 0.22, slot: index }));
   }
-  if (room.heal) spawnPickup(0.8, -1.4, 'heal');
+  if (room.heal && route) {
+    const spot = route.encounter(roomIndex, 0, false);
+    spawnPickup(spot.x + 1.4, spot.z, 'heal');
+  } else if (room.heal) spawnPickup(0.8, -1.4, 'heal');
   if (level.id === 1 && roomIndex === 0) {
-    showHint(touchOn
-      ? 'Stick to move. SLASH chains hits. BLOCK, DODGE, JUMP, and KI. Bosses end with FATALITY.'
-      : 'WASD move · Space jump · J slash · K block · L dodge · U thunder. Bosses: J J U.');
+    const tutor = document.getElementById('tutor');
+    if (tutor) tutor.classList.remove('hidden');
   }
 }
 
@@ -1649,6 +1672,71 @@ function updateFloaters(dt) {
   }
 }
 
+function setObjective(text) {
+  const el = document.getElementById('objective');
+  if (el) el.textContent = text;
+}
+
+function disposeRoute() {
+  if (!route) return;
+  const geos = new Set();
+  const mats = new Set();
+  route.group.traverse((obj) => {
+    if (obj.geometry && !geos.has(obj.geometry)) {
+      geos.add(obj.geometry);
+      obj.geometry.dispose();
+    }
+    if (!obj.material) return;
+    const list = Array.isArray(obj.material) ? obj.material : [obj.material];
+    list.forEach((material) => {
+      if (mats.has(material)) return;
+      mats.add(material);
+      material.dispose();
+    });
+  });
+  scene.remove(route.group);
+  route = null;
+}
+
+function mountRoute(level) {
+  disposeRoute();
+  route = buildPlace(THREE, level);
+  scene.add(route.group);
+  if (stage.yard) stage.yard.visible = false;
+  player.x = route.centerX(route.startZ);
+  player.z = route.startZ;
+  player.yaw = Math.PI;
+  cam.yaw = 0;
+  cam.userUntil = 0;
+}
+
+function showYard(on) {
+  if (stage.yard) stage.yard.visible = on;
+  if (route) route.group.visible = !on;
+  for (const item of decor) item.group.visible = on;
+  if (on) {
+    scene.fog.near = 16;
+    scene.fog.far = 52;
+  }
+}
+
+function updateMarker() {
+  if (!marker) {
+    marker = new THREE.Mesh(
+      new THREE.ConeGeometry(0.42, 0.9, 4),
+      new THREE.MeshBasicMaterial({ color: 0xfff6b0 })
+    );
+    marker.rotation.x = Math.PI;
+    scene.add(marker);
+  }
+  const show = mode === 'play' && route && route.group.visible && !ending;
+  marker.visible = show;
+  if (!show) return;
+  const z = route.blockZ + 1.5;
+  marker.position.set(route.centerX(z), 2.4 + Math.sin(time * 4) * 0.2, z);
+  marker.rotation.y = time * 2;
+}
+
 function snapCamera() {
   placeCamera(1);
   camera.position.copy(desired);
@@ -1657,8 +1745,8 @@ function snapCamera() {
 }
 
 function placeCamera(alpha) {
-  const dist = mode === 'menu' ? 6.1 : 7.15;
-  const height = mode === 'menu' ? 2.45 : 3.85;
+  const dist = mode === 'menu' ? 6.1 : 8.4;
+  const height = mode === 'menu' ? 2.45 : 4.6;
   const bx = Math.sin(cam.yaw);
   const bz = Math.cos(cam.yaw);
   const focusX = player.x - bx * (mode === 'menu' ? 0 : 1.3);
@@ -1673,7 +1761,10 @@ function placeCamera(alpha) {
 }
 
 function updateCamera(dt) {
-  if (mode === 'menu') cam.yaw += dt * (reduceMotion ? 0.05 : 0.18);
+  if (mode === 'menu' && !(route && route.group.visible)) cam.yaw += dt * (reduceMotion ? 0.05 : 0.18);
+  if (mode === 'play' && route && route.group.visible && performance.now() > cam.userUntil) {
+    cam.yaw = dampAngle(cam.yaw, player.yaw + Math.PI, 4.2, dt);
+  }
   placeCamera(dt);
   const k = 1 - Math.exp(-5.5 * dt);
   camera.position.lerp(desired, k);
@@ -1707,9 +1798,9 @@ function updateHud(dt) {
     document.getElementById('bossName').textContent = `${boss.bossName} · ${boss.bossTitle}`;
     bossFill.style.transform = `scaleX(${clamp(boss.hp / boss.maxHp, 0, 1)})`;
   }
-  bDodge.classList.toggle('cd', player.dodgeCd > 0);
-  bKi.classList.toggle('ready', player.ki >= 40 && player.specialCd <= 0);
-  bKi.classList.toggle('cd', player.specialCd > 0 || player.ki < 40);
+  if (bDodge) bDodge.classList.toggle('cd', player.dodgeCd > 0);
+  if (bKi) bKi.classList.toggle('ready', player.ki >= statMaxKi() * 0.35 && player.specialCd <= 0);
+  if (bKi) bKi.classList.toggle('cd', player.specialCd > 0 || player.ki < 40);
   if (hintT > 0) {
     hintT -= dt;
     if (hintT <= 0) hintEl.classList.add('hidden');
@@ -1747,9 +1838,10 @@ function openMenu() {
   queuedLevel = 0;
   hideScreens();
   menuEl.classList.remove('hidden');
-  for (const item of decor) item.group.visible = true;
   for (const cat of cats) cat.group.visible = false;
-  applyTheme(1);
+  const keepRoute = started && !cleared && route;
+  showYard(!keepRoute);
+  if (!keepRoute) applyTheme(1);
   refreshMenu();
   cam.userUntil = 0;
 }
@@ -1792,6 +1884,8 @@ function startRun(id) {
   fatality = null;
   runCoins = 0;
   document.body.classList.remove('finishing');
+  const tutorEl = document.getElementById('tutor');
+  if (tutorEl) tutorEl.classList.add('hidden');
   const finish = document.getElementById('finish');
   if (finish) finish.classList.remove('show');
   clearCombat();
@@ -1834,7 +1928,12 @@ function startRun(id) {
   hero.root.rotation.z = 0;
   hero.spin.rotation.set(0, 0, 0);
   for (const item of decor) item.group.visible = false;
+  mountRoute(currentLevel());
   applyTheme(currentLevel().world);
+  if (scene.fog) {
+    scene.fog.near = 26;
+    scene.fog.far = 82;
+  }
   snapCamera();
   mode = 'play';
   hideScreens();
@@ -1940,10 +2039,7 @@ function bindInput() {
   let drag = null;
   canvas.addEventListener('contextmenu', (event) => event.preventDefault());
   canvas.addEventListener('pointerdown', (event) => {
-    if (event.pointerType === 'touch') {
-      const upper = event.clientY < window.innerHeight * 0.62;
-      if (!upper) return;
-    }
+    if (touchOn || event.pointerType === 'touch') return;
     if (event.button !== 0 && event.button !== 2) return;
     drag = { id: event.pointerId, x: event.clientX, moved: false, button: event.button, yaw: cam.yaw };
     canvas.setPointerCapture(event.pointerId);
@@ -1981,7 +2077,12 @@ function bindInput() {
       button.setPointerCapture(event.pointerId);
       ensureAudio();
       if (act === 'block') { blockSrc.touch = true; syncBlock(); }
-      else if (mode === 'play') buffer[act] = 0.16;
+      else if (act === 'jump' && mode === 'play') {
+        const now = performance.now();
+        if (now - lastJumpTap < 320) buffer.dodge = 0.16;
+        else buffer.jump = 0.16;
+        lastJumpTap = now;
+      } else if (mode === 'play' && act) buffer[act] = 0.16;
     });
     const release = () => {
       if (act === 'block') { blockSrc.touch = false; syncBlock(); }
@@ -2008,12 +2109,16 @@ function bindInput() {
     stick.active = false;
     stick.x = 0;
     stick.y = 0;
-    knob.style.left = '45px';
-    knob.style.top = '45px';
+    knob.style.left = '61px';
+    knob.style.top = '61px';
   };
   stickZone.addEventListener('pointerup', endStick);
   stickZone.addEventListener('pointercancel', endStick);
 
+  document.getElementById('btn-tutor').addEventListener('click', () => {
+    document.getElementById('tutor').classList.add('hidden');
+    ensureAudio();
+  });
   document.getElementById('btn-play').addEventListener('click', () => {
     ensureAudio();
     startRun(progress.complete ? 50 : progress.unlocked);
@@ -2111,22 +2216,24 @@ function renderUpgrades() {
 }
 
 const THEMES = {
-  1: { fog: 0x3a2038, top: 0x100818, mid: 0xc45b68, bot: 0x2a1422, ground: 0xcec4b8, deck: 0xd0894a, outer: 0x241820, petal: 0xffb7c5, light: 0xff9444, glow: 0xffaa66, mountain: 0x1a1222, torii: 0xd24b3c, sun: 0xfff0dc, sunI: 2.5, rim: 0x9ec8ff, flora: 'cherry' },
-  2: { fog: 0x1c3328, top: 0x0c1812, mid: 0x7dbe86, bot: 0x163024, ground: 0x8aa56e, deck: 0x9a7340, outer: 0x142018, petal: 0xd7ecb0, light: 0xd6ee8a, glow: 0xe4ffb0, mountain: 0x1a2c22, torii: 0x6e9a48, sun: 0xf0ffd8, sunI: 2.3, rim: 0xb7e0c0, flora: 'bamboo' },
-  3: { fog: 0x1a1430, top: 0x0a0816, mid: 0x5a3d78, bot: 0x120e1c, ground: 0x6a6278, deck: 0x4a3c58, outer: 0x100c18, petal: 0xc8b8e8, light: 0xb48cff, glow: 0xd0b8ff, mountain: 0x161222, torii: 0x3a3058, sun: 0xd0c8ff, sunI: 1.7, rim: 0x8870c0, flora: 'none' },
-  4: { fog: 0x3a140c, top: 0x1a0a08, mid: 0xe06030, bot: 0x2a0c08, ground: 0x5a4038, deck: 0x6a3828, outer: 0x24100c, petal: 0xffb070, light: 0xff6622, glow: 0xff8844, mountain: 0x2a1612, torii: 0x8a3018, sun: 0xffc090, sunI: 2.6, rim: 0xff8060, flora: 'lava' },
-  5: { fog: 0x243848, top: 0x101820, mid: 0x9ec4e0, bot: 0x1a2838, ground: 0xd5e4ee, deck: 0xc5d8e6, outer: 0x1a2830, petal: 0xf4fbff, light: 0xd0ecff, glow: 0xeaf6ff, mountain: 0xc5d4e0, torii: 0xe8f4ff, sun: 0xf0f6ff, sunI: 2.4, rim: 0xb7d8ff, flora: 'ice' },
-  6: { fog: 0x140818, top: 0x07060f, mid: 0x3a1860, bot: 0x120814, ground: 0x2a2438, deck: 0x1c1830, outer: 0x0c0814, petal: 0x7af0ff, light: 0xff3d9a, glow: 0x22f0ff, mountain: 0x120818, torii: 0xff2f86, sun: 0xc080ff, sunI: 1.5, rim: 0x22e0ff, flora: 'neon' },
-  7: { fog: 0x2a2410, top: 0x14180c, mid: 0xc6a050, bot: 0x1c1a10, ground: 0xa09060, deck: 0x8a7040, outer: 0x1a1810, petal: 0xf0d080, light: 0xffcc66, glow: 0xffe0a0, mountain: 0x3a3420, torii: 0xc49030, sun: 0xffe2b0, sunI: 2.5, rim: 0xe0c070, flora: 'cherry' },
-  8: { fog: 0x1a1c22, top: 0x0c0e12, mid: 0x6a3030, bot: 0x14161c, ground: 0x6a6e74, deck: 0x4a4e54, outer: 0x121418, petal: 0xd0d4d8, light: 0xff5544, glow: 0xff7766, mountain: 0x1a1c22, torii: 0x8a3030, sun: 0xffd0c0, sunI: 1.8, rim: 0xff8060, flora: 'spike' },
-  9: { fog: 0x100818, top: 0x05040a, mid: 0x3a1868, bot: 0x0a0612, ground: 0x2a2040, deck: 0x1a1230, outer: 0x08060e, petal: 0xd0a0ff, light: 0xaa66ff, glow: 0xe0b0ff, mountain: 0x100818, torii: 0x402060, sun: 0xc090ff, sunI: 1.2, rim: 0x8040c0, flora: 'none' },
-  10: { fog: 0x3a2818, top: 0x1a100c, mid: 0xe0b060, bot: 0x2a1810, ground: 0xe0c8a0, deck: 0xd0a060, outer: 0x241810, petal: 0xffe0b0, light: 0xffcc77, glow: 0xffe2a8, mountain: 0x3a2818, torii: 0xe0a040, sun: 0xfff0d0, sunI: 2.7, rim: 0xffe0b0, flora: 'banner' },
+  1: { fog: 0xf0b0c8, top: 0x6a78d8, mid: 0xff8aa8, bot: 0xffd0a8, ground: 0xf2c98a, deck: 0xf0b060, outer: 0x7dce6a, petal: 0xffb7c5, light: 0xffb15a, glow: 0xffd090, mountain: 0xc47a8a, torii: 0xe24b4a, sun: 0xfff6e4, sunI: 3.4, rim: 0xfff1c8, flora: 'cherry' },
+  2: { fog: 0xb7e89a, top: 0x5ec8ff, mid: 0x8ee07a, bot: 0xd8f0b0, ground: 0xb6e07a, deck: 0xc6a05a, outer: 0x3ecf6a, petal: 0xe4ffc0, light: 0xe8ff9a, glow: 0xf0ffc0, mountain: 0x6aaa58, torii: 0x7dba4a, sun: 0xfffbe8, sunI: 3.3, rim: 0xe8ffd0, flora: 'bamboo' },
+  3: { fog: 0xc0b0e8, top: 0x6a68c8, mid: 0xd0a0ff, bot: 0xf0c8e8, ground: 0xc4b0e8, deck: 0x8a78c0, outer: 0x6a58a8, petal: 0xe4d0ff, light: 0xd0b0ff, glow: 0xefe0ff, mountain: 0x8a78b8, torii: 0xb48cff, sun: 0xfff0ff, sunI: 3.1, rim: 0xffe8ff, flora: 'none' },
+  4: { fog: 0xffb080, top: 0xff7848, mid: 0xffc070, bot: 0xffe0b0, ground: 0xffb07a, deck: 0xe07040, outer: 0xff7a3a, petal: 0xffd0a0, light: 0xff8844, glow: 0xffc090, mountain: 0xd06040, torii: 0xff5530, sun: 0xfff0d8, sunI: 3.5, rim: 0xffe0c0, flora: 'lava' },
+  5: { fog: 0xe8f6ff, top: 0x8fd0ff, mid: 0xd8f4ff, bot: 0xffffff, ground: 0xffffff, deck: 0xd5ecf8, outer: 0xd7f3ff, petal: 0xffffff, light: 0xeaf6ff, glow: 0xffffff, mountain: 0xd0e4f0, torii: 0xf7fbff, sun: 0xffffff, sunI: 3.4, rim: 0xffffff, flora: 'ice' },
+  6: { fog: 0x6a48c0, top: 0x24185a, mid: 0xff4fa8, bot: 0x7a5cff, ground: 0x4a3c78, deck: 0x2a2048, outer: 0x3a2860, petal: 0x7af0ff, light: 0xff4fa3, glow: 0x5dfff0, mountain: 0x5a3888, torii: 0xff3d9a, sun: 0xffe0ff, sunI: 2.8, rim: 0xb8fff8, flora: 'neon' },
+  7: { fog: 0xf0c878, top: 0x79b0e8, mid: 0xf0c060, bot: 0xffe2b0, ground: 0xf0c878, deck: 0xd0a050, outer: 0xe0b050, petal: 0xffe8a8, light: 0xffd070, glow: 0xffe8b0, mountain: 0xc89848, torii: 0xe0a040, sun: 0xfff6e0, sunI: 3.4, rim: 0xfff0c8, flora: 'cherry' },
+  8: { fog: 0xc8d0d8, top: 0x8aa0c0, mid: 0xe07070, bot: 0xf0e0d8, ground: 0xd5dade, deck: 0x8a9098, outer: 0xb7c0c8, petal: 0xffd0c8, light: 0xff7766, glow: 0xffc0b0, mountain: 0x9aa4ae, torii: 0xd05050, sun: 0xfff4ee, sunI: 3.2, rim: 0xffe8e0, flora: 'spike' },
+  9: { fog: 0xc090f0, top: 0x5a48b0, mid: 0xe080ff, bot: 0xf0c8ff, ground: 0xb388f0, deck: 0x7a58c0, outer: 0x7a4ec8, petal: 0xf0c8ff, light: 0xe0a0ff, glow: 0xf4d8ff, mountain: 0x8a68c0, torii: 0xd0a0ff, sun: 0xfff0ff, sunI: 3.0, rim: 0xffe8ff, flora: 'none' },
+  10: { fog: 0xffe0a8, top: 0x7eb0e8, mid: 0xffd070, bot: 0xfff0d0, ground: 0xffe3a8, deck: 0xf0c060, outer: 0xf0d48a, petal: 0xfff0c8, light: 0xffd080, glow: 0xfff0c0, mountain: 0xe0b070, torii: 0xf0b040, sun: 0xfff8e8, sunI: 3.6, rim: 0xfff6e0, flora: 'banner' },
 };
 
 function applyTheme(worldId) {
   const theme = THEMES[worldId] || THEMES[1];
   if (!stage.sky) return;
   scene.fog.color.set(theme.fog);
+  scene.fog.near = route && route.group.visible ? 28 : 16;
+  scene.fog.far = route && route.group.visible ? 84 : 54;
   scene.background.set(theme.fog);
   stage.sky.uniforms.top.value.set(theme.top);
   stage.sky.uniforms.mid.value.set(theme.mid);
@@ -2145,7 +2252,7 @@ function applyTheme(worldId) {
   stage.glows.forEach((sprite) => sprite.material.color.set(theme.glow));
   if (sun) {
     sun.color.set(theme.sun);
-    sun.intensity = theme.sunI;
+    sun.intensity = Math.max(3.1, theme.sunI);
   }
   if (rimLight) rimLight.color.set(theme.rim);
   stage.cherries.forEach((tree) => { tree.visible = theme.flora === 'cherry'; });
@@ -2160,15 +2267,15 @@ function applyTheme(worldId) {
 function moveStick(event) {
   const dx = event.clientX - stick.originX;
   const dy = event.clientY - stick.originY;
-  const max = 52;
+  const max = 70;
   const len = Math.hypot(dx, dy) || 1;
   const clamped = Math.min(max, len);
   const nx = dx / len;
   const ny = dy / len;
   stick.x = clamp(dx / max, -1, 1);
   stick.y = clamp(-dy / max, -1, 1);
-  knob.style.left = `${45 + nx * clamped}px`;
-  knob.style.top = `${45 + ny * clamped}px`;
+  knob.style.left = `${61 + nx * clamped}px`;
+  knob.style.top = `${61 + ny * clamped}px`;
 }
 
 function buildArena() {
@@ -2192,6 +2299,8 @@ function buildArena() {
   sky.frustumCulled = false;
   scene.add(sky);
   stage.sky = sky.material;
+  stage.yard = new THREE.Group();
+  scene.add(stage.yard);
 
   const starPositions = [];
   for (let i = 0; i < 180; i++) {
@@ -2220,7 +2329,7 @@ function buildArena() {
     const angle = (i / 8) * Math.PI * 2;
     const mountain = new THREE.Mesh(new THREE.ConeGeometry(4 + (i % 3), 7 + (i % 4) * 1.6, 5), std(0x1a1222, 1, 0));
     mountain.position.set(Math.sin(angle) * 30, 2.2, Math.cos(angle) * 30);
-    scene.add(mountain);
+    stage.yard.add(mountain);
     stage.mountains.push(mountain);
   }
 
@@ -2228,7 +2337,7 @@ function buildArena() {
   outer.rotation.x = -Math.PI / 2;
   outer.position.y = -0.05;
   outer.receiveShadow = true;
-  scene.add(outer);
+  stage.yard.add(outer);
   stage.outer = outer;
 
   const stone = paintedTexture((g) => {
@@ -2249,7 +2358,7 @@ function buildArena() {
   const ground = new THREE.Mesh(new THREE.CircleGeometry(12.2, 48), new THREE.MeshStandardMaterial({ map: stone, color: 0xcec4b8, roughness: 0.96, metalness: 0 }));
   ground.rotation.x = -Math.PI / 2;
   ground.receiveShadow = true;
-  scene.add(ground);
+  stage.yard.add(ground);
   stage.ground = ground;
 
   const wood = paintedTexture((g) => {
@@ -2266,17 +2375,17 @@ function buildArena() {
   deck.rotation.x = -Math.PI / 2;
   deck.position.y = 0.02;
   deck.receiveShadow = true;
-  scene.add(deck);
+  stage.yard.add(deck);
   stage.deck = deck;
 
   const emblem = new THREE.Mesh(new THREE.CircleGeometry(1.4, 32), new THREE.MeshBasicMaterial({ map: emblemTex, transparent: true }));
   emblem.rotation.x = -Math.PI / 2;
   emblem.position.y = 0.04;
-  scene.add(emblem);
+  stage.yard.add(emblem);
   const emblemRing = new THREE.Mesh(new THREE.RingGeometry(1.42, 1.55, 40), new THREE.MeshBasicMaterial({ color: COL.cyan, side: THREE.DoubleSide }));
   emblemRing.rotation.x = -Math.PI / 2;
   emblemRing.position.y = 0.045;
-  scene.add(emblemRing);
+  stage.yard.add(emblemRing);
 
   const woodMat = std(0x5a3a28, 0.8, 0.05);
   const ropeMat = std(0xd7c39a, 0.7, 0.05);
@@ -2285,13 +2394,13 @@ function buildArena() {
     const post = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.09, 1.15, 6), woodMat);
     post.position.set(Math.sin(angle) * 11.25, 0.55, Math.cos(angle) * 11.25);
     post.castShadow = true;
-    scene.add(post);
+    stage.yard.add(post);
   }
   for (const y of [0.45, 0.9]) {
     const rope = new THREE.Mesh(new THREE.TorusGeometry(11.25, 0.025, 6, 48), ropeMat);
     rope.rotation.x = Math.PI / 2;
     rope.position.y = y;
-    scene.add(rope);
+    stage.yard.add(rope);
   }
 
   const vermilion = std(0xd24b3c, 0.55, 0.08);
@@ -2311,7 +2420,7 @@ function buildArena() {
   torii.add(left, right, lintel, cap, tie);
   torii.position.set(0, 0, -9.55);
   torii.traverse((obj) => { if (obj.isMesh) { obj.castShadow = true; obj.receiveShadow = true; } });
-  scene.add(torii);
+  stage.yard.add(torii);
   stage.toriiRed = vermilion;
   props.push({ x: -1.2, z: -9.55, r: 0.38 }, { x: 1.2, z: -9.55, r: 0.38 });
 
@@ -2335,7 +2444,7 @@ function buildArena() {
     }
     tree.position.set(Math.sin(angle) * radius, 0, Math.cos(angle) * radius);
     tree.scale.setScalar(0.9 + (i % 3) * 0.18);
-    scene.add(tree);
+    stage.yard.add(tree);
     stage.cherries.push(tree);
   }
 
@@ -2355,10 +2464,10 @@ function buildArena() {
     roof.rotation.y = Math.PI / 4;
     group.add(pole, house, roof);
     group.position.set(x, 0, z);
-    scene.add(group);
+    stage.yard.add(group);
     const light = new THREE.PointLight(0xff9444, touchOn ? 12 : 18, 9, 2);
     light.position.set(x, 1.5, z);
-    scene.add(light);
+    stage.yard.add(light);
     stage.lights.push(light);
     stage.houses.push(house);
     const sprite = new THREE.Sprite(new THREE.SpriteMaterial({
@@ -2366,7 +2475,7 @@ function buildArena() {
     }));
     sprite.position.set(x, 1.45, z);
     sprite.scale.set(1.6, 1.6, 1);
-    scene.add(sprite);
+    stage.yard.add(sprite);
     stage.glows.push(sprite);
     props.push({ x, z, r: 0.4 });
   });
@@ -2387,7 +2496,7 @@ function buildArena() {
       rot: Math.random() * 6,
     });
   }
-  scene.add(petals);
+  stage.yard.add(petals);
   stage.petalMat = petalMat;
   stage.fog = scene.fog;
 
@@ -2399,14 +2508,14 @@ function buildArena() {
     bamboo.add(stalk);
   }
   bamboo.visible = false;
-  scene.add(bamboo);
+  stage.yard.add(bamboo);
   stage.bamboo = bamboo;
 
   const lava = new THREE.Mesh(new THREE.TorusGeometry(8.2, 0.28, 8, 40), new THREE.MeshStandardMaterial({ color: 0xff5a22, emissive: 0xff3a10, emissiveIntensity: 0.8, roughness: 0.45 }));
   lava.rotation.x = Math.PI / 2;
   lava.position.y = 0.05;
   lava.visible = false;
-  scene.add(lava);
+  stage.yard.add(lava);
   stage.lava = lava;
 
   const ice = new THREE.Group();
@@ -2417,7 +2526,7 @@ function buildArena() {
     ice.add(shard);
   }
   ice.visible = false;
-  scene.add(ice);
+  stage.yard.add(ice);
   stage.ice = ice;
 
   const neon = new THREE.Group();
@@ -2428,7 +2537,7 @@ function buildArena() {
     neon.add(bar);
   }
   neon.visible = false;
-  scene.add(neon);
+  stage.yard.add(neon);
   stage.neon = neon;
 
   const spikes = new THREE.Group();
@@ -2439,7 +2548,7 @@ function buildArena() {
     spikes.add(spike);
   }
   spikes.visible = false;
-  scene.add(spikes);
+  stage.yard.add(spikes);
   stage.spikes = spikes;
 
   const banners = new THREE.Group();
@@ -2451,7 +2560,7 @@ function buildArena() {
     banners.add(cloth);
   }
   banners.visible = false;
-  scene.add(banners);
+  stage.yard.add(banners);
   stage.banners = banners;
 
   const sparkGeo = new THREE.SphereGeometry(0.055, 6, 5);
@@ -2470,14 +2579,14 @@ function boot() {
   renderer.setSize(window.innerWidth, window.innerHeight);
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
-  renderer.toneMappingExposure = 1.22;
+  renderer.toneMappingExposure = 1.55;
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
   scene = new THREE.Scene();
   camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 120);
-  scene.add(new THREE.AmbientLight(0xffc8aa, 0.38));
-  scene.add(new THREE.HemisphereLight(0xffd0b4, 0x2a1834, 0.85));
+  scene.add(new THREE.AmbientLight(0xfff4e8, 0.72));
+  scene.add(new THREE.HemisphereLight(0xfff6ee, 0xc8e0ff, 1.15));
   sun = new THREE.DirectionalLight(0xfff0dc, 2.5);
   sun.position.set(8, 16, 5);
   sun.castShadow = true;
@@ -2492,7 +2601,7 @@ function boot() {
   sun.shadow.normalBias = 0.04;
   scene.add(sun);
   scene.add(sun.target);
-  const rim = new THREE.DirectionalLight(0x9ec8ff, 0.9);
+  const rim = new THREE.DirectionalLight(0xfff6e0, 1.8);
   rim.position.set(-8, 6, 8);
   scene.add(rim);
   rimLight = rim;
@@ -2541,6 +2650,9 @@ function boot() {
 
   buildArena();
   buildHero();
+  const heroLight = new THREE.PointLight(0xfff6e4, 14, 7, 2);
+  heroLight.position.set(0, 1.8, 0.6);
+  hero.root.add(heroLight);
   for (const kind of ['alley', 'pounce', 'brute']) {
     const built = buildCat(kind);
     built.ring.visible = false;
@@ -2594,6 +2706,7 @@ function boot() {
     updateSlashes(dt);
     updateFloaters(dt);
     updateCamera(dt);
+    updateMarker();
     updateHud(dt);
     renderer.render(scene, camera);
   }
