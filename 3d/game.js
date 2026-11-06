@@ -276,9 +276,26 @@ function floatText(x, y, z, text, cls) {
 
 const floaters = [];
 
+let toonMap = null;
 function std(color, rough = 0.72, metal = 0.04, emissive = 0x000000) {
-  const material = new THREE.MeshStandardMaterial({
-    color, roughness: rough, metalness: metal, emissive, emissiveIntensity: 1,
+  if (!toonMap) {
+    const canvas = document.createElement('canvas');
+    canvas.width = 4;
+    canvas.height = 1;
+    const ctx = canvas.getContext('2d');
+    ['#5c5c66', '#9a9aa4', '#d8d8e0', '#ffffff'].forEach((paint, index) => {
+      ctx.fillStyle = paint;
+      ctx.fillRect(index, 0, 1, 1);
+    });
+    toonMap = new THREE.CanvasTexture(canvas);
+    toonMap.magFilter = THREE.NearestFilter;
+    toonMap.minFilter = THREE.NearestFilter;
+  }
+  const material = new THREE.MeshToonMaterial({
+    color,
+    gradientMap: toonMap,
+    emissive,
+    emissiveIntensity: metal > 0.25 ? 0.35 : 0.08,
   });
   material.userData.baseEm = emissive;
   return material;
@@ -1735,6 +1752,19 @@ function updateMarker() {
   const z = route.blockZ + 1.5;
   marker.position.set(route.centerX(z), 2.4 + Math.sin(time * 4) * 0.2, z);
   marker.rotation.y = time * 2;
+  if (!route.fx) return;
+  const bits = route.fx.userData.bits;
+  const dummy = route.fxDummy || (route.fxDummy = new THREE.Object3D());
+  for (let i = 0; i < bits.length; i++) {
+    const bit = bits[i];
+    bit.y -= bit.sp * 0.05;
+    if (bit.y < 0.2) bit.y = 5.5;
+    dummy.position.set(player.x + bit.x, bit.y, player.z + bit.z);
+    dummy.rotation.set(time + i, time * 0.3, 0);
+    dummy.updateMatrix();
+    route.fx.setMatrixAt(i, dummy.matrix);
+  }
+  route.fx.instanceMatrix.needsUpdate = true;
 }
 
 function snapCamera() {
@@ -2575,7 +2605,7 @@ function buildArena() {
 
 function boot() {
   renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance' });
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, touchOn ? 1.35 : 1.7));
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, touchOn ? 1.1 : 1.5));
   renderer.setSize(window.innerWidth, window.innerHeight);
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
@@ -2590,7 +2620,7 @@ function boot() {
   sun = new THREE.DirectionalLight(0xfff0dc, 2.5);
   sun.position.set(8, 16, 5);
   sun.castShadow = true;
-  sun.shadow.mapSize.set(touchOn ? 1024 : 2048, touchOn ? 1024 : 2048);
+  sun.shadow.mapSize.set(touchOn ? 512 : 1024, touchOn ? 512 : 1024);
   sun.shadow.camera.near = 1;
   sun.shadow.camera.far = 40;
   sun.shadow.camera.left = -16;

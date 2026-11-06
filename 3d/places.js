@@ -29,17 +29,16 @@ export function buildPlace(THREE, level) {
   group.name = `route-${level.world}-${level.id}`;
   const gates = [];
 
-  const bedColor = [0x7dce6a, 0x3ecf6a, 0x6a58a8, 0xff7a3a, 0xd7f3ff, 0x3a2860, 0xe0b050, 0xb7c0c8, 0x7a4ec8, 0xf0d48a][world - 1];
-  const roadColor = [0xf2c98a, 0xb6e07a, 0xc4b0e8, 0xffb07a, 0xffffff, 0x4a3c78, 0xf0c878, 0xd5dade, 0xb388f0, 0xffe3a8][world - 1];
+  const look = WORLD_LOOK[world - 1];
   const bed = new THREE.Mesh(
-    new THREE.BoxGeometry(42, 0.4, length + 36),
-    new THREE.MeshStandardMaterial({ color: bedColor, roughness: 1 })
+    new THREE.BoxGeometry(48, 0.4, length + 40),
+    new THREE.MeshStandardMaterial({ map: paintTex(THREE, look.bed), color: look.bedTint, roughness: 1 })
   );
   bed.position.set(0, -0.35, startZ - length / 2);
   bed.receiveShadow = true;
   group.add(bed);
 
-  const roadMat = new THREE.MeshStandardMaterial({ color: roadColor, roughness: 0.92 });
+  const roadMat = new THREE.MeshStandardMaterial({ map: paintTex(THREE, look.road), color: look.roadTint, roughness: 0.86 });
   const steps = Math.ceil(length / 4);
   for (let i = 0; i <= steps; i++) {
     const z0 = startZ + 2 - i * 4;
@@ -70,6 +69,13 @@ export function buildPlace(THREE, level) {
 
   const decor = WORLD_DECOR[world] || WORLD_DECOR[1];
   decor(THREE, group, { centerX, startZ, length, halfWidth, span, rooms, section, flip, encounterZ, gateZ });
+  edgeTufts(THREE, group, { centerX, startZ, length, halfWidth }, look.tuft);
+  skyline(THREE, group, { startZ, length }, look.far, world === 6 || world === 8);
+  const sunBall = new THREE.Mesh(new THREE.SphereGeometry(2.4, 12, 10), new THREE.MeshBasicMaterial({ color: look.sun }));
+  sunBall.position.set(16, 24, startZ - 6);
+  group.add(sunBall);
+  const fx = drift(THREE, look.flake);
+  group.add(fx);
 
   for (let i = 0; i < rooms; i++) {
     const z = gateZ(i);
@@ -91,7 +97,7 @@ export function buildPlace(THREE, level) {
   if (level.rooms.some((room) => room.boss)) {
     const plaza = new THREE.Mesh(
       new THREE.CylinderGeometry(halfWidth + 1.4, halfWidth + 1.6, 0.22, 6),
-      new THREE.MeshStandardMaterial({ color: decor.plaza || roadColor, roughness: 0.8 })
+      new THREE.MeshStandardMaterial({ color: decor.plaza || look.roadTint, roughness: 0.8 })
     );
     plaza.position.set(centerX(bossZ), 0.08, bossZ);
     group.add(plaza);
@@ -103,6 +109,7 @@ export function buildPlace(THREE, level) {
     startZ,
     length,
     blockZ: gateZ(0),
+    fx,
     centerX,
     encounter(index, slot, isBoss) {
       const z = encounterZ(Math.max(0, Math.min(rooms - 1, index)));
@@ -117,6 +124,91 @@ export function buildPlace(THREE, level) {
       gates.forEach((gate, n) => { gate.beam.visible = n >= i; });
     },
   };
+}
+
+const WORLD_LOOK = [
+  { bed: 'grass', bedTint: 0x3fa84a, road: 'stone', roadTint: 0xd7c4a4, tuft: 0x2f9a3a, far: 0x7a9a6a, sun: 0xfff2c4, flake: 0xffb7c8 },
+  { bed: 'grass', bedTint: 0x2f9a44, road: 'dirt', roadTint: 0xc4a06a, tuft: 0x3cb85a, far: 0x4e8a48, sun: 0xfff6d0, flake: 0xd8f0a8 },
+  { bed: 'stone', bedTint: 0x6a5888, road: 'stone', roadTint: 0xb9a6d4, tuft: 0x8a78c0, far: 0x5a4880, sun: 0xfff0e8, flake: 0xd0b8ff },
+  { bed: 'ash', bedTint: 0xc45a28, road: 'ash', roadTint: 0xe8a060, tuft: 0x8a4030, far: 0xa04830, sun: 0xffe0a0, flake: 0xffb060 },
+  { bed: 'snow', bedTint: 0xf4fbff, road: 'snow', roadTint: 0xffffff, tuft: 0xd0e8f8, far: 0xc5d8ea, sun: 0xffffff, flake: 0xffffff },
+  { bed: 'asphalt', bedTint: 0x2a2048, road: 'asphalt', roadTint: 0x3a3058, tuft: 0xff4fa3, far: 0x241848, sun: 0xffe0ff, flake: 0x7af0ff },
+  { bed: 'dirt', bedTint: 0xc4923a, road: 'dirt', roadTint: 0xe8c070, tuft: 0x6a8a38, far: 0x8a6830, sun: 0xfff0c0, flake: 0xf0d090 },
+  { bed: 'stone', bedTint: 0x8a9098, road: 'stone', roadTint: 0xd0d4d8, tuft: 0x6a7078, far: 0x5a6068, sun: 0xfff4ee, flake: 0xffc8b8 },
+  { bed: 'void', bedTint: 0x5a38a0, road: 'void', roadTint: 0x8a62d0, tuft: 0xd0a0ff, far: 0x3a2870, sun: 0xf0d8ff, flake: 0xe0b0ff },
+  { bed: 'stone', bedTint: 0xe8c878, road: 'stone', roadTint: 0xffe6b0, tuft: 0xf0d090, far: 0xc8a060, sun: 0xfff6d8, flake: 0xffe8a8 },
+];
+
+function paintTex(THREE, kind) {
+  const c = document.createElement('canvas');
+  c.width = c.height = 128;
+  const g = c.getContext('2d');
+  const fills = {
+    grass: ['#3fa84a', '#2f8a38', '#67c85a'],
+    dirt: ['#c4a06a', '#a88448', '#ddc090'],
+    stone: ['#c8b8a0', '#a89880', '#e4d8c4'],
+    ash: ['#e09058', '#c46838', '#f0b080'],
+    snow: ['#ffffff', '#e7f4ff', '#d5e8f8'],
+    asphalt: ['#2a2440', '#3a3058', '#ff4fa3'],
+    void: ['#6a48b8', '#8a62d8', '#d0a0ff'],
+  };
+  const palette = fills[kind] || fills.stone;
+  g.fillStyle = palette[0];
+  g.fillRect(0, 0, 128, 128);
+  for (let i = 0; i < 18; i++) {
+    g.fillStyle = palette[1 + (i % 2)];
+    g.fillRect((i * 23) % 112, (i * 17) % 112, 18 + (i % 5) * 4, 14);
+  }
+  if (kind === 'grass' || kind === 'dirt') {
+    g.strokeStyle = 'rgba(40,90,30,0.35)';
+    for (let i = 0; i < 12; i++) g.strokeRect(4, i * 10, 120, 8);
+  }
+  const tex = new THREE.CanvasTexture(c);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+  tex.repeat.set(5, 6);
+  return tex;
+}
+
+function edgeTufts(THREE, group, info, color) {
+  const n = 48;
+  const geo = new THREE.SphereGeometry(0.35, 6, 5);
+  const mesh = new THREE.InstancedMesh(geo, new THREE.MeshStandardMaterial({ color, roughness: 1 }), n);
+  const dummy = new THREE.Object3D();
+  for (let i = 0; i < n; i++) {
+    const z = info.startZ + 2 - (i * (info.length + 6)) / n;
+    const side = i % 2 === 0 ? 1 : -1;
+    dummy.position.set(info.centerX(z) + side * (info.halfWidth + 0.6), 0.2, z);
+    dummy.scale.set(1, 0.6, 1);
+    dummy.rotation.set(0, i, 0);
+    dummy.updateMatrix();
+    mesh.setMatrixAt(i, dummy.matrix);
+  }
+  group.add(mesh);
+}
+
+function skyline(THREE, group, info, color, tall) {
+  const mat = new THREE.MeshBasicMaterial({ color });
+  for (let i = 0; i < 8; i++) {
+    const h = (tall ? 10 : 6) + (i % 3) * 2;
+    const shape = tall
+      ? new THREE.BoxGeometry(3.2, h, 2.4)
+      : new THREE.ConeGeometry(3.4, h, 5);
+    const mesh = new THREE.Mesh(shape, mat);
+    mesh.position.set((i - 3.5) * 8, h / 2 - 1, info.startZ - info.length - 6);
+    group.add(mesh);
+  }
+}
+
+function drift(THREE, color) {
+  const n = 36;
+  const geo = new THREE.PlaneGeometry(0.16, 0.1);
+  const mesh = new THREE.InstancedMesh(geo, new THREE.MeshBasicMaterial({ color, side: THREE.DoubleSide, transparent: true, opacity: 0.85 }), n);
+  mesh.frustumCulled = false;
+  const bits = [];
+  for (let i = 0; i < n; i++) bits.push({ x: (Math.random() - 0.5) * 10, y: Math.random() * 6, z: (Math.random() - 0.5) * 12, sp: 0.4 + Math.random() });
+  mesh.userData.bits = bits;
+  return mesh;
 }
 
 function skipNear(z, encounterZ, rooms, pad = 3.2) {
@@ -218,7 +310,10 @@ function houseRow(THREE, group, info, wall, roof, trim) {
     top.rotation.y = Math.PI / 4;
     const door = new THREE.Mesh(new THREE.BoxGeometry(0.45, 0.8, 0.08), trimMat);
     door.position.set(x - side * 1.05, 0.45, z);
-    group.add(body, top, door);
+    const windowMat = new THREE.MeshStandardMaterial({ color: 0xfff2c0, emissive: 0xffe2a0, emissiveIntensity: 0.6 });
+    const win = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.35, 0.06), windowMat);
+    win.position.set(x - side * 1.12, h * 0.65, z + 0.4);
+    group.add(body, top, door, win);
   }
 }
 
@@ -266,7 +361,7 @@ function arch(THREE, group, info, z, red, dark) {
 }
 
 function treeRow(THREE, group, info, pink, bark) {
-  const n = 8 + info.section;
+  const n = 16 + info.section;
   for (let i = 0; i < n; i++) {
     const z = info.startZ - 3 - i * (info.length / n);
     if (skipNear(z, info.encounterZ, info.rooms, 3.5)) continue;
