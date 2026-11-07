@@ -406,7 +406,7 @@ h1 {
   border-color: #fff6d8;
 }
 
-#buttons { position: absolute; right: calc(10px + env(safe-area-inset-right)); bottom: calc(16px + env(safe-area-inset-bottom)); width: 120px; height: 340px; }
+#buttons { position: absolute; right: calc(10px + env(safe-area-inset-right)); bottom: calc(16px + env(safe-area-inset-bottom)); width: 210px; height: 360px; }
 
 #buttons button {
   pointer-events: auto;
@@ -429,8 +429,10 @@ h1 {
   font-size: 15px;
 }
 
-#b-jump { right: 8px; bottom: 132px; background: linear-gradient(180deg, #b8fff0, #3ec8c0); color: #10302c; }
-#b-ki { right: 8px; bottom: 240px; }
+#b-jump { right: 0; bottom: 128px; background: linear-gradient(180deg, #b8fff0, #3ec8c0); color: #10302c; }
+#b-ki { right: 0; bottom: 248px; width: 84px; height: 84px; }
+#b-dodge { right: 100px; bottom: 248px; width: 84px; height: 84px; }
+#b-block { right: 100px; bottom: 140px; width: 84px; height: 84px; }
 #b-fat { right: 0; bottom: 8px; width: 112px; height: 112px; display: none; background: linear-gradient(180deg, #ffb067, #e85a28); color: #2a100c; font-size: 13px; }
 body.finishing #b-fat { display: block; }
 body.finishing #b-slash { display: none; }

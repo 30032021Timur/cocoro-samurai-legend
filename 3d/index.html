@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
   <meta name="theme-color" content="#140c16" />
-  <meta name="description" content="COCORO 3D — fifty levels across ten worlds. A black-and-tan Shiba samurai fights hostile cats." />
+  <meta name="description" content="COCORO 3D — the same fifty-level legend. A black-and-tan Shiba samurai fights yellow demons." />
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
@@ -31,9 +31,9 @@
     <div class="hud-center">
       <div id="areaName">SAKURA VILLAGE</div>
       <div id="waveText">VILLAGE GATE</div>
-      <div id="objective">Defeat the cats</div>
+      <div id="objective">Defeat the demons</div>
       <div id="bossWrap" class="hidden">
-        <span id="bossName">MOMO</span>
+        <span id="bossName">KIBA</span>
         <div class="bar boss"><span id="bossFill"></span></div>
       </div>
     </div>
@@ -55,9 +55,11 @@
       <div id="knob"></div>
     </div>
     <div id="buttons">
-      <button id="b-ki" type="button" data-act="special">SPECIAL</button>
+      <button id="b-ki" type="button" data-act="special">KI</button>
+      <button id="b-dodge" type="button" data-act="dodge">DODGE</button>
+      <button id="b-block" type="button" data-act="block">BLOCK</button>
       <button id="b-jump" type="button" data-act="jump">JUMP</button>
-      <button id="b-slash" type="button" data-act="attack">ATTACK</button>
+      <button id="b-slash" type="button" data-act="attack">SLASH</button>
       <button id="b-fat" type="button">FATALITY</button>
     </div>
   </div>
@@ -68,8 +70,8 @@
       <h1>HOW TO PLAY</h1>
       <ul class="help">
         <li>Move with the stick or WASD. The camera stays behind you.</li>
-        <li>ATTACK or J hits the nearest cat. JUMP or Space hops. Tap JUMP twice to dash.</li>
-        <li>SPECIAL or U spends energy. Follow the bright arrows. Clear the cats to open the gate.</li>
+        <li>SLASH or J chains hits. BLOCK or K guards. DODGE or L rolls. JUMP or Space hops.</li>
+        <li>KI or U is Thunder Strike. Follow the bright arrows. Clear the demons to open the gate.</li>
       </ul>
       <button id="btn-tutor" class="primary" type="button">GOT IT</button>
     </div>
@@ -91,7 +93,7 @@
           <p class="sub">SAMURAI LEGEND</p>
         </div>
       </div>
-      <p class="tag">Black-and-tan Shiba samurai. Hostile cats. Clear a level to unlock the next.</p>
+      <p class="tag">Black-and-tan Shiba samurai. Yellow demons. Clear a level to unlock the next.</p>
       <p class="meta" id="menu-best"></p>
       <div class="col">
         <button id="btn-play" class="primary" type="button">PLAY</button>
@@ -102,8 +104,8 @@
       </div>
       <ul class="help">
         <li>Walk with WASD or the stick. The camera follows.</li>
-        <li>J or ATTACK strikes the nearest cat. Space or JUMP hops. Tap JUMP twice to dash. U or SPECIAL spends energy.</li>
-        <li>Follow the glowing road. Defeat the cats, then go through the gate.</li>
+        <li>J or SLASH strikes. K or BLOCK guards. L or DODGE rolls. Space or JUMP hops. U or KI is Thunder Strike.</li>
+        <li>Follow the glowing road. Defeat the demons, then go through the gate.</li>
         <li>Bosses end with FINISH HIM, then J, J, U.</li>
       </ul>
     </div>

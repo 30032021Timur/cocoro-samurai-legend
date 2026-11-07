@@ -36,7 +36,7 @@ export const WORLDS = [
   },
   {
     "id": 8,
-    "name": "Iron Fortress",
+    "name": "Demon Fortress",
     "theme": "iron"
   },
   {
@@ -46,7 +46,7 @@ export const WORLDS = [
   },
   {
     "id": 10,
-    "name": "Heart Citadel",
+    "name": "Empire",
     "theme": "heart"
   }
 ];
@@ -240,10 +240,10 @@ export const BOSSES = {
     "ear": 2364464,
     "eye": 14725375
   },
-  "momo": {
-    "id": "momo",
-    "name": "MOMO",
-    "title": "HEART LORD",
+  "lord": {
+    "id": "lord",
+    "name": "LORD",
+    "title": "",
     "hp": 680,
     "dmg": 21,
     "speed": 2.85,
@@ -1690,7 +1690,7 @@ export const LEVELS = [
     "id": 36,
     "name": "Iron Gate",
     "world": 8,
-    "worldName": "Iron Fortress",
+    "worldName": "Demon Fortress",
     "theme": "iron",
     "clearBonus": 300,
     "rooms": [
@@ -1730,7 +1730,7 @@ export const LEVELS = [
     "id": 37,
     "name": "Spike Court",
     "world": 8,
-    "worldName": "Iron Fortress",
+    "worldName": "Demon Fortress",
     "theme": "iron",
     "clearBonus": 310,
     "rooms": [
@@ -1772,7 +1772,7 @@ export const LEVELS = [
     "id": 38,
     "name": "Chain Bridge",
     "world": 8,
-    "worldName": "Iron Fortress",
+    "worldName": "Demon Fortress",
     "theme": "iron",
     "clearBonus": 320,
     "rooms": [
@@ -1813,7 +1813,7 @@ export const LEVELS = [
     "id": 39,
     "name": "War Drum",
     "world": 8,
-    "worldName": "Iron Fortress",
+    "worldName": "Demon Fortress",
     "theme": "iron",
     "clearBonus": 330,
     "rooms": [
@@ -1856,7 +1856,7 @@ export const LEVELS = [
     "id": 40,
     "name": "Fortress Captain",
     "world": 8,
-    "worldName": "Iron Fortress",
+    "worldName": "Demon Fortress",
     "theme": "iron",
     "clearBonus": 350,
     "rooms": [
@@ -2098,7 +2098,7 @@ export const LEVELS = [
     "id": 46,
     "name": "Gold March",
     "world": 10,
-    "worldName": "Heart Citadel",
+    "worldName": "Empire",
     "theme": "heart",
     "clearBonus": 380,
     "rooms": [
@@ -2138,7 +2138,7 @@ export const LEVELS = [
     "id": 47,
     "name": "Banner City",
     "world": 10,
-    "worldName": "Heart Citadel",
+    "worldName": "Empire",
     "theme": "heart",
     "clearBonus": 390,
     "rooms": [
@@ -2180,7 +2180,7 @@ export const LEVELS = [
     "id": 48,
     "name": "Throne Bridge",
     "world": 10,
-    "worldName": "Heart Citadel",
+    "worldName": "Empire",
     "theme": "heart",
     "clearBonus": 400,
     "rooms": [
@@ -2221,7 +2221,7 @@ export const LEVELS = [
     "id": 49,
     "name": "Empire Keep",
     "world": 10,
-    "worldName": "Heart Citadel",
+    "worldName": "Empire",
     "theme": "heart",
     "clearBonus": 410,
     "rooms": [
@@ -2262,9 +2262,9 @@ export const LEVELS = [
   },
   {
     "id": 50,
-    "name": "Lord Momo",
+    "name": "Lord",
     "world": 10,
-    "worldName": "Heart Citadel",
+    "worldName": "Empire",
     "theme": "heart",
     "clearBonus": 500,
     "rooms": [
@@ -2293,7 +2293,7 @@ export const LEVELS = [
       {
         "name": "Lord Court",
         "foes": [],
-        "boss": "momo",
+        "boss": "lord",
         "heal": false
       }
     ]

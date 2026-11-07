@@ -1,6 +1,7 @@
 import * as THREE from './vendor/three.module.js';
 import { WORLDS, UPGRADES, BOSSES, LEVELS } from './campaign.js';
 import { buildPlace } from './places.js';
+import { createAudio, BOSS_SAY } from './audio.js';
 
 const ARENA_R = 11.15;
 const SAVE_KEY = 'cocoro-3d-v2';
@@ -18,11 +19,11 @@ const SLOTS = [
   { x: 0.1, z: -8.8 },
 ];
 const KINDS = {
-  alley: { hp: 40, speed: 3.2, damage: 8, range: 1.5, windup: 0.4, recover: 0.32, cool: 0.85, scale: 1, hurt: 0.32, leap: false, body: 0xe8883a, dark: 0xc45c22, belly: 0xf2d2b0, ear: 0xf2c2a4, eye: 0xffe38a },
-  pounce: { hp: 30, speed: 5.05, damage: 11, range: 1.75, windup: 0.28, recover: 0.34, cool: 1.0, scale: 0.92, hurt: 0.24, leap: true, body: 0x2b2932, dark: 0x14141a, belly: 0x3a3844, ear: 0xf0b8c8, eye: 0xd2b0ff },
-  blade: { hp: 56, speed: 3.35, damage: 11, range: 1.68, windup: 0.36, recover: 0.3, cool: 0.8, scale: 1.05, hurt: 0.22, leap: false, guard: true, body: 0xc9a36a, dark: 0x3a2a1c, belly: 0xf3ddc0, ear: 0xe7c7a4, eye: 0xffe08a },
-  brute: { hp: 108, speed: 2.15, damage: 15, range: 1.9, windup: 0.55, recover: 0.46, cool: 1.15, scale: 1.4, hurt: 0.18, leap: false, body: 0xf4efe4, dark: 0x2a241c, belly: 0xfff8ee, ear: 0xf0b090, eye: 0xffe08a },
-  boss: { hp: 360, speed: 2.6, damage: 16, range: 2.2, windup: 0.46, recover: 0.38, cool: 0.8, scale: 2.08, hurt: 0.1, leap: false, body: 0xf7f4ee, dark: 0x171717, belly: 0xfffaf4, ear: 0x171717, eye: 0xffd0a8 },
+  alley: { hp: 40, speed: 3.2, damage: 8, range: 1.5, windup: 0.4, recover: 0.32, cool: 0.85, scale: 1, hurt: 0.32, leap: false, role: 'grunt', body: 0xffd84a, dark: 0x141414, belly: 0xffe38a, ear: 0xe2a41a, eye: 0x1a120c },
+  pounce: { hp: 30, speed: 5.05, damage: 11, range: 1.75, windup: 0.28, recover: 0.34, cool: 1.0, scale: 0.92, hurt: 0.24, leap: true, role: 'ninja', body: 0xffd84a, dark: 0x12151f, belly: 0xffe38a, ear: 0xe2a41a, eye: 0xff4455 },
+  blade: { hp: 56, speed: 3.35, damage: 11, range: 1.68, windup: 0.36, recover: 0.3, cool: 0.8, scale: 1.05, hurt: 0.22, leap: false, guard: true, role: 'katana', body: 0xffd84a, dark: 0x141414, belly: 0xffe38a, ear: 0xe2a41a, eye: 0x1a120c },
+  brute: { hp: 108, speed: 2.15, damage: 15, range: 1.9, windup: 0.55, recover: 0.46, cool: 1.15, scale: 1.4, hurt: 0.18, leap: false, role: 'grunt', body: 0xffd23a, dark: 0x2a241c, belly: 0xffe38a, ear: 0xe0a818, eye: 0x1a120c },
+  boss: { hp: 360, speed: 2.6, damage: 16, range: 2.2, windup: 0.46, recover: 0.38, cool: 0.8, scale: 2.08, hurt: 0.1, leap: false, role: 'boss', body: 0xf2c431, dark: 0x12080a, belly: 0xffe08a, ear: 0xe6c36a, eye: 0xff5a3c },
 };
 
 const COL = {
@@ -131,7 +132,6 @@ let hero;
 let petals;
 let petalData = [];
 let sun;
-let ac;
 
 function loadSave() {
   try { return JSON.parse(localStorage.getItem(SAVE_KEY)) || {}; } catch { return {}; }
@@ -185,60 +185,29 @@ function showBoot(msg) {
   el.textContent = msg;
 }
 
+const audio = createAudio();
+const shots = [];
+
 function ensureAudio() {
-  const Ctx = window.AudioContext || window.webkitAudioContext;
-  if (!Ctx) return;
-  if (!ac) ac = new Ctx();
-  if (ac.state === 'suspended') ac.resume();
-}
-
-function tone(freq, dur, type, vol, slide) {
-  if (muted || !ac) return;
-  const t = ac.currentTime;
-  const o = ac.createOscillator();
-  const g = ac.createGain();
-  o.type = type;
-  o.frequency.setValueAtTime(freq, t);
-  if (slide) o.frequency.exponentialRampToValueAtTime(Math.max(48, slide), t + dur);
-  g.gain.setValueAtTime(vol, t);
-  g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
-  o.connect(g).connect(ac.destination);
-  o.start(t);
-  o.stop(t + dur + 0.02);
-}
-
-function noise(dur, vol, freq) {
-  if (muted || !ac) return;
-  const length = Math.max(1, Math.floor(ac.sampleRate * dur));
-  const buffer = ac.createBuffer(1, length, ac.sampleRate);
-  const data = buffer.getChannelData(0);
-  for (let i = 0; i < data.length; i++) data[i] = (Math.random() * 2 - 1) * (1 - i / data.length);
-  const src = ac.createBufferSource();
-  src.buffer = buffer;
-  const filter = ac.createBiquadFilter();
-  filter.type = 'bandpass';
-  filter.frequency.value = freq;
-  const g = ac.createGain();
-  g.gain.value = vol;
-  src.connect(filter).connect(g).connect(ac.destination);
-  src.start();
+  audio.ensure();
+  audio.bus.voice = !muted;
+  audio.setVolumes(muted ? 0 : 0.45, muted ? 0 : 0.8);
 }
 
 function sfx(name) {
-  if (name === 'slash') { noise(0.09, 0.08, 1400); tone(520, 0.08, 'triangle', 0.035, 180); }
-  else if (name === 'hit') { noise(0.07, 0.1, 300); tone(180, 0.08, 'square', 0.03, 70); }
-  else if (name === 'hurt') { tone(140, 0.16, 'sawtooth', 0.04, 60); }
-  else if (name === 'block') { tone(640, 0.07, 'square', 0.03, 240); }
-  else if (name === 'counter') { tone(880, 0.12, 'triangle', 0.05, 1320); }
-  else if (name === 'jump') { tone(420, 0.09, 'sine', 0.03, 640); }
-  else if (name === 'dodge') { noise(0.1, 0.05, 900); }
-  else if (name === 'thunder') { noise(0.18, 0.12, 200); tone(90, 0.22, 'sawtooth', 0.05, 40); }
-  else if (name === 'meow') { tone(640, 0.14, 'triangle', 0.03, 280); }
-  else if (name === 'deny') { tone(180, 0.08, 'square', 0.02, 120); }
-  else if (name === 'heal') { tone(520, 0.1, 'sine', 0.04, 780); }
-  else if (name === 'win') { tone(523, 0.12, 'triangle', 0.04); setTimeout(() => tone(659, 0.12, 'triangle', 0.04), 90); setTimeout(() => tone(784, 0.2, 'triangle', 0.04), 180); }
-  else if (name === 'lose') { tone(220, 0.25, 'sawtooth', 0.04, 80); }
-  else if (name === 'start') { tone(392, 0.08, 'triangle', 0.03, 523); }
+  if (muted) return;
+  ensureAudio();
+  const alias = { counter: 'perfect', dodge: 'whoosh', deny: 'block', win: 'heal', lose: 'ko', start: 'ui' };
+  const fn = audio.sfx[alias[name] || name];
+  if (fn) fn();
+}
+
+const said = [];
+function say(text) {
+  said.push(text);
+  if (muted) return;
+  ensureAudio();
+  audio.say(text);
 }
 
 function syncMuteLabels() {
@@ -477,12 +446,8 @@ function buildCat(kind, stats = KINDS[kind]) {
   body.scale.set(0.86, 0.72, 1.25);
   const belly = addMesh(group, new THREE.SphereGeometry(0.24, 12, 10), bellyMat, 0, 0.38, 0.05);
   belly.scale.set(0.7, 0.45, 1.1);
-  if (kind === 'alley') {
-    for (let i = 0; i < 3; i++) {
-      const stripe = addMesh(group, new THREE.BoxGeometry(0.08, 0.05, 0.22), darkMat, 0, 0.78, -0.18 + i * 0.18);
-      stripe.rotation.z = 0.15 * (i - 1);
-    }
-  } else if (kind === 'blade') {
+  addMesh(group, new THREE.BoxGeometry(0.46, 0.22, 0.28), darkMat, 0, 0.58, 0.16);
+  if (kind === 'blade') {
     const sword = addMesh(group, new THREE.BoxGeometry(0.04, 0.42, 0.02), std(COL.blade, 0.25, 0.7), 0.28, 0.42, 0.2);
     sword.rotation.z = -0.4;
     addMesh(group, new THREE.BoxGeometry(0.12, 0.03, 0.04), std(COL.gold, 0.35, 0.6), 0.22, 0.34, 0.18);
@@ -511,6 +476,15 @@ function buildCat(kind, stats = KINDS[kind]) {
     ear.rotation.z = side * -0.25;
     addMesh(ear, new THREE.ConeGeometry(0.08, 0.22, 6), kind === 'boss' ? darkMat : bodyMat, 0, 0.1, 0);
     addMesh(ear, new THREE.ConeGeometry(0.04, 0.12, 6), std(stats.ear, 0.8, 0), 0, 0.08, 0.02);
+    const horn = addMesh(head, new THREE.ConeGeometry(0.045, 0.2, 5), darkMat, side * 0.1, 0.22, -0.02);
+    horn.rotation.z = side * -0.45;
+  }
+  if (kind === 'pounce') {
+    addMesh(head, new THREE.SphereGeometry(0.2, 10, 8), darkMat, 0, 0.08, -0.04);
+    const scarf = addMesh(group, new THREE.BoxGeometry(0.08, 0.28, 0.04), std(0xc7362f, 0.55, 0.1), -0.22, 0.62, 0.1);
+    scarf.rotation.z = 0.4;
+  } else if (kind === 'blade') {
+    addMesh(head, new THREE.BoxGeometry(0.28, 0.05, 0.08), std(0xc7362f, 0.5, 0.15), 0, 0.16, 0.12);
   }
   const tail = pivot(group, 0, 0.58, -0.48);
   for (let i = 0; i < 3; i++) {
@@ -558,11 +532,11 @@ function spawnCat(kind, slot, profile) {
     stats.damage = profile.dmg;
     stats.speed = profile.speed;
     stats.scale = profile.scale;
-    stats.body = profile.body;
-    stats.dark = profile.dark;
-    stats.belly = profile.belly;
-    stats.ear = profile.ear;
-    stats.eye = profile.eye;
+    stats.body = 0xf2c431;
+    stats.dark = 0x12080a;
+    stats.belly = 0xffe08a;
+    stats.ear = 0xe6c36a;
+    stats.eye = 0xff5a3c;
     stats.hurt = 0.12;
     stats.range = 2.2;
   } else {
@@ -618,7 +592,7 @@ function spawnCat(kind, slot, profile) {
   };
   cat.yaw = Math.atan2(player.x - cat.x, player.z - cat.z);
   cats.push(cat);
-  if (baseKind !== 'pounce') sfx('meow');
+  if (profile) sfx('roar');
   return cat;
 }
 
@@ -736,6 +710,9 @@ function hitCat(cat, dmg, knock, launch) {
       cat.vx = 0;
       cat.vz = 0;
       fatality = { cat, step: 0, style: cat.finisher };
+      audio.setMode('silent');
+      sfx('roar');
+      say('Finish him!');
       document.body.classList.add('finishing');
       const banner = document.getElementById('finish');
       banner.classList.add('show');
@@ -854,7 +831,12 @@ function startAttack(index) {
 function advanceFatality(kind) {
   if (!fatality) return;
   const need = ['attack', 'attack', 'special'][fatality.step];
-  if (kind !== need && kind !== 'fatality') return;
+  if (kind !== need && kind !== 'fatality') {
+    fatality.step = 0;
+    document.querySelectorAll('#finish span').forEach((pip) => pip.classList.remove('on'));
+    callout('AGAIN!');
+    return;
+  }
   fatality.step += 1;
   document.querySelectorAll('#finish span').forEach((pip, index) => pip.classList.toggle('on', index < fatality.step));
   sfx(kind === 'special' || fatality.step === 3 ? 'thunder' : 'slash');
@@ -870,7 +852,10 @@ function resolveFatality() {
   cat.fatalDone = true;
   cat.finishing = false;
   burst(cat.x, 1.1, cat.z, style === 'blue' ? 0x9fd8ff : 0xffe7a0, 20, 6);
-  callout('FATALITY');
+  callout(style === 'thunder' ? 'THUNDER FATALITY' : 'FATALITY');
+  audio.impact();
+  say(style === 'thunder' ? 'Thunder fatality!' : 'Fatality!');
+  setTimeout(() => { say('Cocoro wins!'); sfx('heal'); }, 1800);
   killCat(cat);
 }
 
@@ -947,6 +932,7 @@ function thunderStrike() {
   const face = forwardFromYaw(player.yaw);
   sfx('thunder');
   callout('THUNDER!');
+  say('Thunder Strike!');
   shake = Math.max(shake, 0.34);
   hitStop = Math.max(hitStop, 0.055);
   player.iframe = Math.max(player.iframe, 0.16);
@@ -1044,7 +1030,8 @@ function beginCatAttack(cat) {
   if (cat.boss) {
     cat.step = (cat.step + 1) % 3;
     cat.pattern = ['claw', 'slam', 'leap'][cat.step];
-  } else if (cat.stats.leap) cat.pattern = 'leap';
+  } else if (cat.stats.role === 'ninja') cat.pattern = cat.step++ % 2 ? 'star' : 'leap';
+  else if (cat.stats.leap) cat.pattern = 'leap';
   else if (cat.stats.scale > 1.2 && Math.random() < 0.5) cat.pattern = 'slam';
   else cat.pattern = 'claw';
   cat.lockX = player.x;
@@ -1053,8 +1040,47 @@ function beginCatAttack(cat) {
   cat.ring.material.color.set(cat.pattern === 'slam' ? 0xff2a2a : 0xff7744);
 }
 
+function spawnStar(cat) {
+  const mesh = new THREE.Mesh(
+    new THREE.OctahedronGeometry(0.12, 0),
+    new THREE.MeshBasicMaterial({ color: 0xf4f7fb })
+  );
+  mesh.position.set(cat.x, 0.7, cat.z);
+  scene.add(mesh);
+  const dx = player.x - cat.x;
+  const dz = player.z - cat.z;
+  const len = Math.hypot(dx, dz) || 1;
+  shots.push({ mesh, vx: (dx / len) * 8, vz: (dz / len) * 8, life: 1.2, dmg: cat.stats.damage });
+  sfx('star');
+}
+
+function updateShots(dt) {
+  for (let i = shots.length - 1; i >= 0; i--) {
+    const shot = shots[i];
+    shot.life -= dt;
+    shot.mesh.position.x += shot.vx * dt;
+    shot.mesh.position.z += shot.vz * dt;
+    shot.mesh.rotation.y += dt * 8;
+    if (Math.hypot(shot.mesh.position.x - player.x, shot.mesh.position.z - player.z) < 0.55) {
+      hurtPlayer(shot.dmg, { x: shot.mesh.position.x, z: shot.mesh.position.z }, false);
+      shot.life = 0;
+    }
+    if (shot.life <= 0) {
+      scene.remove(shot.mesh);
+      shot.mesh.geometry.dispose();
+      shot.mesh.material.dispose();
+      shots.splice(i, 1);
+    }
+  }
+}
+
 function catTryHit(cat) {
   if (cat.didHit || player.dead) return;
+  if (cat.pattern === 'star') {
+    cat.didHit = true;
+    spawnStar(cat);
+    return;
+  }
   const scale = cat.stats.scale;
   if (cat.pattern === 'slam') {
     if (Math.hypot(player.x - cat.x, player.z - cat.z) < 1.15 + 1.35 * scale) {
@@ -1153,8 +1179,10 @@ function updateCat(cat, dt) {
     const gate = cat.phaseMark === 0 ? 0.66 : 0.33;
     if (cat.hp <= cat.maxHp * gate) {
       cat.phaseMark += 1;
-      spawnQueue.push({ kind: 'blade', t: 0.15, slot: 1 }, { kind: 'pounce', t: 0.4, slot: 3 });
+      if (cat.phaseMark === 2) spawnQueue.push({ kind: 'pounce', t: 0.2, slot: 2 });
+      sfx('roar');
       callout(cat.phaseMark === 1 ? 'PHASE 2' : 'PHASE 3');
+      say(cat.phaseMark === 1 ? 'Phase two!' : 'Phase three!');
     }
   }
 
@@ -1481,12 +1509,16 @@ function beginRoom() {
   if (route) route.setRoom(roomIndex);
   if (room.boss) {
     const profile = BOSSES[room.boss];
-    callout(`${profile.name} · ${profile.title}`);
+    const title = String(profile.title || '').replace(/otd/ig, '').trim();
+    audio.setMode('boss');
+    callout(title ? `${profile.name} · ${title}` : profile.name);
+    say(BOSS_SAY[profile.id] || `${profile.name}.`);
     setObjective('Defeat the boss');
     spawnQueue = [{ kind: 'boss', t: 0.35, slot: 0, profile }];
   } else {
+    audio.setMode('village');
     callout(room.name);
-    setObjective('Defeat the cats');
+    setObjective('Defeat the demons');
     spawnQueue = room.foes.map((kind, index) => ({ kind, t: 0.2 + index * 0.22, slot: index }));
   }
   if (room.heal && route) {
@@ -1825,7 +1857,8 @@ function updateHud(dt) {
   const boss = cats.find((cat) => cat.boss && !cat.dead);
   bossWrap.classList.toggle('hidden', !boss);
   if (boss) {
-    document.getElementById('bossName').textContent = `${boss.bossName} · ${boss.bossTitle}`;
+    const title = String(boss.bossTitle || '').replace(/otd/ig, '').trim();
+    document.getElementById('bossName').textContent = title ? `${boss.bossName} · ${title}` : boss.bossName;
     bossFill.style.transform = `scaleX(${clamp(boss.hp / boss.maxHp, 0, 1)})`;
   }
   if (bDodge) bDodge.classList.toggle('cd', player.dodgeCd > 0);
@@ -1862,6 +1895,7 @@ function hideScreens() {
 
 function openMenu() {
   mode = 'menu';
+  audio.setMode('off');
   hud.classList.add('hidden');
   touchEl.classList.add('hidden');
   hintEl.classList.add('hidden');
@@ -1890,7 +1924,7 @@ function showEnd(kind) {
   document.getElementById('end-title').textContent = kind === 'win' ? (level && level.id === 50 ? 'LEGEND' : 'CLEAR') : 'DEFEATED';
   document.getElementById('end-text').textContent = kind === 'win'
     ? `${level.name} is clear.`
-    : `${level.name} still belongs to the cats.`;
+    : `${level.name} is not clear.`;
   document.getElementById('end-score').textContent = `Score ${score} · Coins ${progress.coins}`;
   const again = document.getElementById('btn-again');
   if (kind === 'win' && level.id < 50) {
@@ -1935,6 +1969,9 @@ function startRun(id) {
   player.yaw = Math.PI;
   player.maxHp = statMaxHp();
   player.hp = player.maxHp;
+  const level = currentLevel();
+  audio.setMode('village');
+  say(level.id === 1 ? 'Sakura Village. The legend begins.' : level.name);
   player.ki = Math.round(statMaxKi() * 0.5);
   player.dead = false;
   player.atk = null;
@@ -2714,6 +2751,7 @@ function boot() {
       hitStop -= dt;
       updatePetals(dt * 0.2);
       updateCamera(dt);
+      audio.tick();
       renderer.render(scene, camera);
       return;
     }
@@ -2722,6 +2760,7 @@ function boot() {
       updateBuffers(dt);
       updatePlayer(dt);
       updateCats(dt);
+      updateShots(dt);
       updatePickups(dt);
       updateRooms(dt);
       if (ending) {
@@ -2738,6 +2777,7 @@ function boot() {
     updateCamera(dt);
     updateMarker();
     updateHud(dt);
+    audio.tick();
     renderer.render(scene, camera);
   }
   frame();
@@ -2753,6 +2793,8 @@ function boot() {
     ready: true,
     player,
     cats,
+    said,
+    audio,
     progress,
     LEVELS,
     WORLDS,
